@@ -1,0 +1,28 @@
+# Regenerable
+node_modules/
+dist/
+.venv/
+.venv-sun/
+.npm-cache/
+*.tsbuildinfo
+__pycache__/
+.DS_Store
+
+# Local overrides
+.env.local
+.env.*.local
+
+# Private: this copy of the résumé carries a phone number. Never commit or deploy it.
+# The copy the site offers, without the number, is public/owen-sun-zhang-resume.pdf.
+/Owen_Sun_Zhang_Resume.pdf
+/private/
+# No PDF dropped in the project folder is ever committed; the public copy lives in public/.
+/*.pdf
+
+# Source media and the simulated Sun's intermediate files (about 700 MB). Keep them locally and
+# back them up outside git.
+/references/*
+!/references/README.md
+
+# Earlier versions and notes, kept locally.
+/archive/
