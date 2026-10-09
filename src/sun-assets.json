@@ -1,0 +1,16 @@
+{
+  "icons": {
+    "sun": "simulated",
+    "still": "40f863660126ed2ebba8512a86ab12feb5b3ceaebd0c227a5cc0217a874d3141"
+  },
+  "shareImage": {
+    "sun": "simulated",
+    "still": "40f863660126ed2ebba8512a86ab12feb5b3ceaebd0c227a5cc0217a874d3141"
+  },
+  "stills": {
+    "sun-simulated-large.mp4": "b5821df0bf91f1153421eb7bc8babc67e0a8af7ae95d71e29c9557a41f2f5a28",
+    "sun-simulated-small.mp4": "36f93c351012de435cfe099476324788c2969ef34a346c60dc5dc33624aa29fc",
+    "sun-aia304-desktop.mp4": "6dd54643adac5c07a227c29332f5cabdb44a86a782811a807729c4ee84f75695",
+    "sun-aia304-mobile.mp4": "9886552fdce32850798eae30f0c237e275544bd6d33e307c1fdaca4a81700dcd"
+  }
+}
