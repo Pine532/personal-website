@@ -1,0 +1,117 @@
+﻿THE SIMULATED SUN
+
+The Sun this site shows by default is a simulation: a computer-generated
+model, made for this site in October 2026. It is not a photograph, not an
+observation, and not a record of any real day on the Sun. The features on it
+do not exist.
+
+The site can also show the NASA footage the model was calibrated against.
+The label beside the Sun says which one the page is showing; this note
+describes the simulation.
+
+WHAT IT IMITATES
+
+NASA's Solar Dynamics Observatory (SDO) photographs the Sun in extreme
+ultraviolet light. Its 304 ångström channel shows the layer just above the
+visible surface, where the plasma is at roughly 50,000 kelvin, and NASA
+colors those images red-orange. The simulation imitates that view and uses
+the same coloring.
+
+HOW IT WAS MADE
+
+1. A magnetic network. Magnetic flux concentrations are scattered along the
+   edges of convection cells about 30,000 km across, as on the real Sun. Ten
+   active regions are added (bright patches, with ribbons either side of the
+   line where the magnetic polarity changes and a dark filament along it),
+   and five dark filaments in the quiet areas. They are placed by hand along
+   two belts north and south of the equator; the arrangement is the model's
+   own and follows no observation.
+
+2. Turbulence, combed along a direction. Random noise is added at every
+   scale from one pixel (about 900 km) upward, and its finest scales are
+   stretched along a direction that is random over the quiet Sun and follows
+   the polarity lines and the filaments near them. Where the result is strong
+   it becomes the bright clumps of the network; where it is weak, the dark
+   lanes between them.
+
+3. Calibration against one real frame. In one frame of SDO's 304 Å footage
+   from September 29-30, 2013 (NASA Goddard/SDO) the following were measured:
+   how much detail there is at each scale and orientation, how sparse and how
+   lopsided it is, how detail at different scales and orientations occurs
+   together, and how bright the picture is at each height around the edge of
+   the disk. The model's map was then adjusted toward those measurements,
+   until most of its own, taken over the whole map, agreed with them to
+   within a few percent. Only those measurements were taken from the real
+   frame: about 22,000 numbers. No pixel of any observation is in the
+   picture.
+
+4. A sphere and a camera. The map is wrapped on a sphere that carries a
+   forest of short upright columns, so the texture thickens and softens
+   toward the edge, its dark lanes partly fill in there, and it ends in a
+   ragged fringe of spicules that grows out of it. Beyond the edge are a glow
+   and a few small plumes.
+
+5. Motion. Most of the change happens in place: small bright features flare
+   and fade, larger clumps swell and dim, the fine detail shimmers, and the
+   spicules of the fringe rise and vanish. A little of it is slow sideways
+   drift. Everything repeats a whole number of times per loop, so the last of
+   the 240 frames leads back into the first without a cut, and each frame
+   carries a little fresh grain. (Eight seconds at 30 frames a second, played
+   at 1.2 times that pace. The compressed video file restarts on its one
+   keyframe, which is slightly crisper than the frames before it.) The real
+   Sun also turns, by about twenty pixels over a clip this long; a loop that
+   closes cannot, so the simulated Sun does not.
+
+WHAT IT IS NOT
+
+It is not a physical simulation of the Sun's plasma: that takes a
+supercomputer and still covers only a small patch. It is a statistical and
+geometric model, built to look like SDO's view and checked against it. It
+predicts nothing.
+
+HOW IT WAS CHECKED
+
+A classifier was trained to tell small patches of one picture from patches
+of another by their texture statistics, and scored on patches it had not
+seen: 0.5 means it cannot tell them apart, 1.0 that it always can. The
+patches come from the middle of the disk, within 0.6 of its radius.
+
+- The model's surface against the frame it was calibrated on: 0.61. A
+  finished frame, before video compression: 0.68. For scale, one picture
+  in two forms (a frame before and after compression, or a video's first
+  frame and its still) scores 0.65 to 0.73.
+- The finished video against the NASA video, like for like: their first
+  frames 0.77; frames from the middle of the loop 0.87 to 0.92. Frames from
+  the middle of the NASA video score 0.60 to 0.63 against each other, and
+  the frame the model was calibrated on scores 0.76 to 0.82 against them.
+
+So the model is about as close to the frame it was tuned on as this test
+can measure, and further from the rest of the real footage than real frames
+are from each other. The test looks only at those statistics. An expert
+would still see what they do not measure: this Sun does not turn, its
+active regions lack the fine structure of real ones, and nothing erupts.
+
+Around the edge of the disk, in every eighth frame of the loop, the average
+brightness at each height, from just inside the edge to well outside it, is
+within 4.5 levels (of 255) of the real frame's.
+
+THE REAL THING
+
+The NASA footage the model was calibrated against, which this site showed
+before the simulation:
+Filament Eruption Creates 'Canyon of Fire' on the Sun, SVS 11379.
+https://svs.gsfc.nasa.gov/11379/
+Credit for that footage: NASA's Goddard Space Flight Center/SDO.
+The site's source code still holds it, and the site can be switched back to
+it.
+
+When the simulation is the Sun on show, these are made from its first frame:
+the image shown while the video loads, for reduced motion, and after a media
+failure; the closing image in the Contact section; the link-preview image;
+and the browser icons (square crop around the disk, black sky converted to
+transparency at the small sizes).
+
+The code that generates all of this is in the site's source code, in
+scripts/sun/.
+
+Typeface: Manrope, SIL Open Font License 1.1 (manrope-OFL.txt beside this file).

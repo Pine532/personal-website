@@ -1,0 +1,11 @@
+{
+  "description": "A simulation, not an observation: a model of the Sun's magnetic network whose texture statistics were calibrated against one NASA SDO AIA 304 frame (see scripts/sun/). The first frame of the simulated video.",
+  "origin": "scripts/sun/",
+  "calibratedAgainst": "https://svs.gsfc.nasa.gov/11379/",
+  "credit": "Simulated for this site; calibrated against NASA Goddard Space Flight Center/SDO imagery",
+  "dimensions": [
+    1280,
+    1280
+  ],
+  "transforms": "First decoded frame of sun-simulated-small.mp4 (BT.709 to RGB), WebP quality 80. No crop, rotation, or recoloring."
+}
