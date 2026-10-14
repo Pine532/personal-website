@@ -14,6 +14,14 @@
      value is used, against the full-width header or hero. */
   --page-inset: max(var(--gutter), calc((100% - var(--content-width)) / 2));
   --header-height: 80px;
+  /* The Sun docks in the window's upper-right corner and stays there (hooks/useSunDock.ts,
+     styles/hero.css): its disc is this wide, its top this far below the window's, and its right
+     edge on the page's inset. Here it sits in the header's corner with a little of it below the
+     header; on wider windows it is larger (last rules in this file). --corner-fringe is how far
+     its fringe reaches beyond the disc. */
+  --corner-disc: 84px;
+  --corner-top: 6px;
+  --corner-fringe: calc(var(--corner-disc) * .105);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   font-family: 'Manrope Variable', sans-serif;
@@ -62,6 +70,22 @@ article[id], details[id], :where(a, button, summary, [tabindex]) { scroll-margin
 
 /* Reading sections share the page gutter. */
 .section-shell { padding-inline: var(--gutter); }
+@media (min-width: 701px) {
+  :root { --corner-disc: 96px; }
+}
+/* On a wide window the Sun in the corner is a large one, and it has a lane of its own: Work and
+   About keep the strip beneath it free, the disc's width and a little more, so nothing they hold
+   ever passes under the Sun. The lane is taken from the page's column, not from its margin, since
+   that is where the Sun stands. The hero, the Contact section and the footer keep their full width:
+   the Sun is theirs. Only the foot of the hero keeps the lane too: its credit would otherwise go up
+   beneath the docked Sun as the hero leaves. It is also the Sun's way down to the closing box at
+   the end of the page (hooks/useSunDock.ts looks for it). Not in a window too short to keep its
+   header (styles/hero.css): there is no Sun in the corner there. */
+@media screen and (min-width: 1100px) and (min-height: 600px) {
+  :root { --corner-disc: clamp(150px, 13.9vw, 200px); --corner-top: 26px; --sun-lane: calc(var(--corner-disc) + 30px); }
+  .work-section, .about-section { padding-inline: var(--page-inset) calc(var(--page-inset) + var(--sun-lane)); }
+  .hero-footer { padding-right: var(--sun-lane); }
+}
 
 /* The plain page that config/site-metadata.ts builds into #root: what crawlers and visitors
    without JavaScript read, and what the 404 page uses. React replaces it when the site starts.
@@ -73,6 +97,12 @@ article[id], details[id], :where(a, button, summary, [tabindex]) { scroll-margin
 #root > .plain-page { visibility: hidden; animation: plain-page-appear 0s linear 4s forwards; }
 @keyframes plain-page-appear { to { visibility: visible; } }
 
+/* Where the Sun has no lane of its own, its foot hangs below the header at the window's right-hand
+   end. Whatever takes keyboard focus lands clear of the whole of it, fringe and all, and not only
+   of the header: a control at the end of a line is then never ringed under the Sun. */
+@media (max-width: 1099px) {
+  :where(a, button, summary, [tabindex]) { scroll-margin-top: calc(var(--corner-top) + var(--corner-disc) + var(--corner-fringe) + 12px); }
+}
 /* Where the header scrolls away with the page (styles/hero.css), a small offset is enough. */
 @media (max-height: 599px) {
   section[id] { scroll-margin-top: 0; }
