@@ -1,0 +1,57 @@
+/* About: biography beside education and certifications, then toolkit and earlier experience. */
+.about-section { background: #080906; padding-block: clamp(90px, 9vw, 144px); }
+.about-main, .about-detail { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: clamp(60px, 11vw, 176px); max-width: var(--content-width); margin-inline: auto; }
+.about-detail { margin-top: 90px; padding-top: 44px; border-top: 1px solid var(--line); }
+.about-section h3 { margin: 0 0 7px; font-size: 23px; font-weight: 450; letter-spacing: -0.02em; }
+
+.biography { margin-top: 38px; max-width: 600px; }
+.biography p { margin: 0 0 24px; font-size: clamp(18px, 1.5vw, 22px); line-height: 1.8; color: #cbc8be; }
+.biography .signature { margin-top: 38px; color: var(--muted); font-size: 16px; }
+
+.education > p { font-size: 14px; line-height: 1.7; color: var(--reading); }
+.education .school { color: var(--muted); margin-top: 0; margin-bottom: 20px; }
+.education .graduation { color: var(--text); }
+.graduation span { display: inline-block; margin-left: 20px; }
+.listing { margin-top: 24px; font-size: 14px; line-height: 1.7; color: var(--reading); }
+.listing h4 { margin: 0 0 5px; color: var(--muted); font-size: 12px; font-weight: 400; }
+.listing .inline-list { text-wrap: balance; }
+
+.credentials { border-top: 1px solid var(--line); margin-top: 34px; padding-top: 32px; }
+.credentials ul { list-style: none; margin: 20px 0 0; padding: 0; }
+.credentials li { margin-bottom: 18px; }
+.credentials li:last-child { margin-bottom: 0; }
+.listing p { margin: 2px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.credentials a, .listing a, .credential-name { color: var(--text); font-size: 14px; line-height: 1.6; text-decoration: none; }
+.credentials a:hover, .listing a:hover { text-decoration: underline; }
+/* Inline, so the arrow follows the last word when a name wraps. The padding makes the link a
+   24px target without moving the text. */
+.credentials a, .listing a { padding-block: 3px; }
+.credentials a:focus-visible, .listing a:focus-visible { outline-offset: 0; }
+.credentials a svg, .listing a svg { display: inline-block; width: 11px; height: 11px; margin-left: 6px; stroke-width: 1.2; vertical-align: baseline; }
+.credential-meta { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+
+.skills dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 48px; margin: 22px 0 0; }
+.skills dt { font-size: 12px; color: var(--muted); margin-bottom: 7px; }
+.skills dd { margin: 0; color: var(--reading); font-size: 14px; line-height: 1.85; }
+
+/* The same scale as a project's organization, role, date, and summary. */
+.earlier p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--muted); }
+.earlier .earlier-organization { margin-top: 20px; color: var(--text); font-size: 15px; }
+.earlier .earlier-summary { margin-top: 16px; color: var(--reading); font-size: 15px; line-height: 1.75; max-width: 60ch; }
+
+@media (max-width: 1000px) and (min-width: 861px) {
+  .about-main, .about-detail { gap: 54px; }
+}
+/* One column, with the same rule and the same spacing above every block. */
+@media (max-width: 860px) {
+  .about-main, .about-detail { grid-template-columns: 1fr; gap: 0; }
+  .biography p:last-child { margin-bottom: 0; }
+  .about-background, .credentials, .about-detail, .earlier { margin-top: 44px; padding-top: 38px; border-top: 1px solid var(--line); }
+}
+@media (max-width: 700px) {
+  .biography { margin-top: 28px; }
+  .biography p { font-size: 18px; }
+  .biography .signature { margin-top: 26px; }
+  .skills dl { grid-template-columns: 1fr; gap: 18px; }
+  .earlier .earlier-summary { font-size: 16px; }
+}
