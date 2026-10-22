@@ -1,4 +1,9 @@
-"""Texture building blocks: a Gaussian blur, noise at one scale, and noise stretched along a direction field."""
+"""Texture building blocks: a Gaussian blur, noise at one scale, and noise stretched along a direction field.
+
+The fields are maps of (rows, cols), see globe.py. The Fourier tools are periodic both ways: in x
+that is the map's own wrap; in y it blends the top rows with the bottom rows, which are both the
+dark poles, and the camera never reads across that edge. The stretched noise follows its paths
+around in x and stops them at the top and bottom rows."""
 import numpy as np
 
 
@@ -10,29 +15,29 @@ def blur(field, sigma):
     return np.fft.irfft2(np.fft.rfft2(field) * np.exp(-k2 * (2 * np.pi * sigma) ** 2 / 2), s=field.shape[-2:])
 
 
-def band_noise(rng, size, sigma, count=1):
-    """White noise limited to the octave around `sigma` (difference of Gaussians), unit variance."""
-    white = rng.normal(size=(count, size, size))
+def band_noise(rng, shape, sigma, count=1):
+    """White noise of `shape` (rows, cols) limited to the octave around `sigma` (difference of Gaussians), unit variance."""
+    white = rng.normal(size=(count, *shape))
     out = blur(white, sigma * 0.7) - blur(white, sigma * 1.4)
     return (out / out.std(axis=(1, 2), keepdims=True)).astype(np.float32)
 
 
 def _gather(fields, x, y):
-    """Bilinear samples of every field in a stack (n, size, size) at (x, y), wrapping around."""
-    size = fields.shape[-1]
+    """Bilinear samples of every field in a stack (n, rows, cols) at (x, y): periodic in x, clamped in y."""
+    rows, cols = fields.shape[-2:]
+    y = np.clip(y, 0, rows - 1.001)
     x0 = np.floor(x).astype(np.int32)
-    y0 = np.floor(y).astype(np.int32)
+    y0 = y.astype(np.int32)
     fx = (x - x0).astype(np.float32)
     fy = (y - y0).astype(np.float32)
-    x0 %= size
-    y0 %= size
-    x1 = (x0 + 1) % size
-    y1 = (y0 + 1) % size
+    x0 %= cols
+    x1 = (x0 + 1) % cols
+    y1 = y0 + 1
     return (fields[:, y0, x0] * (1 - fx) + fields[:, y0, x1] * fx) * (1 - fy) + (fields[:, y1, x0] * (1 - fx) + fields[:, y1, x1] * fx) * fy
 
 
 def stretch(fields, dir_x, dir_y, half_length, step=1.0):
-    """Line integral convolution of a stack of fields (n, size, size) along the direction field:
+    """Line integral convolution of a stack of fields (n, rows, cols) along the direction field:
     every pixel becomes a raised-cosine average of the samples met on the line through it,
     `half_length` steps each way.
 
@@ -45,9 +50,9 @@ def stretch(fields, dir_x, dir_y, half_length, step=1.0):
     s = np.arange(count) - half_length
     weights = 0.5 * (1 + np.cos(np.pi * s / (half_length + 1)))
     weights = (weights / weights.sum()).astype(np.float32)
-    size = fields.shape[-1]
+    rows, cols = fields.shape[-2:]
     direction = np.stack([dir_x, dir_y]).astype(np.float32)
-    gx, gy = np.meshgrid(np.arange(size, dtype=np.float32), np.arange(size, dtype=np.float32))
+    gx, gy = np.meshgrid(np.arange(cols, dtype=np.float32), np.arange(rows, dtype=np.float32))
     out = weights[half_length] * fields
     for sign in (+1, -1):
         x, y = gx.copy(), gy.copy()
