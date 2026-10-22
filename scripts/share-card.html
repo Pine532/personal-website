@@ -1,0 +1,33 @@
+<!doctype html>
+<!-- Template for the link-preview image. Rendered to public/og-image.jpg by make-share-image.mjs. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: 'Manrope Variable';
+        font-weight: 200 800;
+        src: url('../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2') format('woff2-variations');
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #000; }
+      body { position: relative; font-family: 'Manrope Variable', sans-serif; font-synthesis: none; color: #f4f2eb; -webkit-font-smoothing: antialiased; }
+      /* The whole frame, corona included: the Sun is never cropped. */
+      .sun { position: absolute; top: 35px; right: 44px; width: 560px; height: 560px; }
+      .copy { position: absolute; top: 50%; left: 72px; transform: translateY(-50%); }
+      h1 { margin: 0; font-size: 62px; font-weight: 400; letter-spacing: -0.035em; line-height: 1.1; white-space: nowrap; }
+      p { max-width: 500px; margin: 22px 0 0; color: #c8c5ba; font-size: 25px; letter-spacing: -0.012em; line-height: 1.45; }
+      .credit { position: absolute; bottom: 44px; left: 72px; margin: 0; color: #aaa89f; font-size: 15px; letter-spacing: 0; }
+    </style>
+  </head>
+  <body>
+    <!-- make-share-image.mjs sets the image and keeps the credit line of the Sun that src/sun-source.json selects. -->
+    <img class="sun" alt="" />
+    <div class="copy">
+      <h1>OWEN SUN ZHANG</h1>
+      <p>Machine learning, cloud infrastructure, and hardware. Computer engineering student at Boston University, class of 2027.</p>
+    </div>
+    <p class="credit" data-source="observed">Solar image: NASA Goddard / SDO</p>
+    <p class="credit" data-source="simulated">Simulated Sun, modeled on NASA SDO imagery</p>
+  </body>
+</html>
