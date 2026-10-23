@@ -3,9 +3,10 @@
     python realism.py <frame.png> <workdir>
     python realism.py <frame.png> <other frame.png>
 
-Scores <workdir>/surface.npy (its central 1152 px) against the real frame, given as the same RGB
-image reference.py takes. Given a second frame instead of a folder, it scores that frame against the
-first: two real frames taken at different times show how far apart the real Sun is from itself.
+Scores <workdir>/surface.npy (its central 1152 px: the patch around longitude 0, latitude 0 of the
+whole-sphere map, see globe.py) against the real frame, given as the same RGB image reference.py
+takes. Given a second frame instead of a folder, it scores that frame against the first: two real
+frames taken at different times show how far apart the real Sun is from itself.
 
 Each field is described patch by patch with second-order wavelet scattering coefficients (how much
 structure there is at each scale and orientation, and how that structure is itself arranged), and a
@@ -171,9 +172,9 @@ def main():
         path = path / 'surface.npy'
         model = np.load(path).astype(np.float64)
         n = real.shape[0]
-        if model.shape[0] != n:
-            lo = (model.shape[0] - n) // 2
-            model = model[lo:lo + n, lo:lo + n]
+        if model.shape != (n, n):
+            r0, c0 = (model.shape[0] - n) // 2, (model.shape[1] - n) // 2
+            model = model[r0:r0 + n, c0:c0 + n]
     else:
         model = reference.bench_reference(reference.unproject(reference.frame_index(path)))[0]
     result = score(model, real, mask, quiet_below=0.6, top=6)
