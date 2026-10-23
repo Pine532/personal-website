@@ -11,6 +11,12 @@
 
 Only these numbers are kept: no pixel of the frame is stored, and the steps that generate the Sun
 (surface.py, texture_match.py, render.py) read the three files, never the frame.
+
+The frame is measured on an equal-area map of its visible hemisphere: the disk center is the origin,
+the limb is the circle of radius sqrt(2), and the map is MAP px across [-HALF, HALF]^2, which makes
+a pixel of 0.001267 solar radii at the disk center. The model's own map is the whole sphere
+(globe.py) with a pixel of nearly the same size at the equator, so its statistics compare like for
+like. The bench is the central BENCH px of the hemisphere map, where the frame is hardly foreshortened.
 """
 import argparse
 
@@ -19,8 +25,21 @@ from PIL import Image
 
 import calibration
 import corona
-import surface
 from palette import to_index
+
+HALF = 1.46                       # the hemisphere map covers [-HALF, HALF]^2
+MAP = 2304                        # pixels across it
+BENCH = 1152                      # pixels across the bench, its central part
+WINDOW_MU = 0.8                   # the bands' curves are measured where mu exceeds this: within 0.6 solar radii of disk center
+DISK_MU = 0.3                     # the tone is measured where mu exceeds this: the disk without its outermost rim
+
+
+def map_grid(size, half):
+    """Map coordinates (u, v) of every pixel of a hemisphere map `size` pixels across [-half, half], and
+    mu there: 1 at disk center, 0 at the limb, below 0 beyond it."""
+    axis = (np.arange(size) + 0.5) * (2 * half / size) - half
+    u, v = np.meshgrid(axis, axis)
+    return u, v, 1 - (u * u + v * v) / 2
 
 
 def frame_index(path):
@@ -42,11 +61,11 @@ def bilinear(field, x, y):
     return (field[y0, x0] * (1 - fx) + field[y0, x0 + 1] * fx) * (1 - fy) + (field[y0 + 1, x0] * (1 - fx) + field[y0 + 1, x0 + 1] * fx) * fy
 
 
-def unproject(index, size=surface.PARAMETERS['M']):
-    """The real frame on the model's equal-area map, so statistics can be compared like for like.
+def unproject(index, size=MAP):
+    """The real frame on the equal-area map of its hemisphere, so statistics can be compared like for like.
     NaN where mu is below 0.05: the frame is too foreshortened there to say anything."""
     n = index.shape[0]
-    u, v, mu = surface.map_grid(size, surface.HALF)
+    u, v, mu = map_grid(size, HALF)
     inside = mu > 0.05
     k = np.sqrt(2 / (1 + np.clip(mu, 0, 1)))
     sx, sz = u / k, v / k
@@ -61,21 +80,21 @@ def unproject(index, size=surface.PARAMETERS['M']):
 def whole_reference(real_map):
     """The real frame's whole map, made fit for the band filters (which wrap around): toward the limb
     it fades into its own mean. Returns it and mu at every pixel."""
-    mu = surface.map_grid(real_map.shape[0], surface.HALF)[2]
+    mu = map_grid(real_map.shape[0], HALF)[2]
     edge = np.clip((mu - 0.05) / 0.1, 0, 1)
     mean = np.nanmean(real_map)
     return np.where(np.isnan(real_map), mean, real_map) * edge + mean * (1 - edge), mu
 
 
-def bench_reference(real_map, n=surface.BENCH['M']):
+def bench_reference(real_map, n=BENCH):
     """The central n pixels of the real frame's map, where it is hardly foreshortened, and the window
     its statistics are taken in: with a sharp edge, and with a soft one."""
     lo = (real_map.shape[0] - n) // 2
-    px = 2 * surface.HALF / real_map.shape[0]
+    px = 2 * HALF / real_map.shape[0]
     axis = (np.arange(n) + 0.5 - n / 2) * px
     u, v = np.meshgrid(axis, axis)
     mu = 1 - (u * u + v * v) / 2
-    return real_map[lo:lo + n, lo:lo + n], mu > calibration.WINDOW_MU, np.clip((mu - calibration.WINDOW_MU) / 0.02, 0, 1)
+    return real_map[lo:lo + n, lo:lo + n], mu > WINDOW_MU, np.clip((mu - WINDOW_MU) / 0.02, 0, 1)
 
 
 def texture_statistics(real, window):
@@ -124,11 +143,11 @@ def main():
 
     # The whole map: what surface.py calibrates against, and the tone texture_match.py finishes with.
     whole, mu = whole_reference(real_map)
-    curves = calibration.reference_statistics(whole, mu > calibration.WINDOW_MU, calibration.filters(whole.shape[0]))
-    curves['smooth_disk'] = calibration.tone_target(whole, mu > calibration.DISK_MU)
+    curves = calibration.reference_statistics(whole, mu > WINDOW_MU, calibration.filters(whole.shape))
+    curves['smooth_disk'] = calibration.tone_target(whole, mu > DISK_MU)
     # The bench: the same curves for the central part alone, which `surface.py --bench` calibrates against.
     bench, bench_window, soft_window = bench_reference(real_map)
-    bench_curves = calibration.reference_statistics(bench, bench_window, calibration.filters(bench.shape[0]))
+    bench_curves = calibration.reference_statistics(bench, bench_window, calibration.filters(bench.shape))
     np.savez(folder / 'texture-curves.npz', **{name: np.array(value) for name, value in curves.items()},
              **{'bench_' + name: np.array(value) for name, value in bench_curves.items()})
     print(f'texture-curves.npz       {len(curves["bands"])} bands, {len(calibration.PROBS)} points each, for the whole map and for the bench')

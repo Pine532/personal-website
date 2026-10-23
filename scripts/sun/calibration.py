@@ -3,10 +3,12 @@
 A map is split in the Fourier domain into bands: differences of Gaussians (they sum back to the
 map exactly); the fine and middle bands are further split into four orientations with cos^2 windows
 (which also sum to one). `match` pulls the brightness distribution of every band toward the real
-frame's; `final_tone` does the same for the smoothed map alone, over the whole disk.
+frame's; `final_tone` does the same for the smoothed map alone.
 
 The real frame's curves are stored in reference/texture-curves.npz (reference.py makes that file),
-so nothing here needs the frame itself.
+so nothing here needs the frame itself. The real frame was measured on its own map (reference.py);
+the model's map is the whole sphere (globe.py), and its distributions are taken with every pixel
+weighted by how much of the sphere it stands for.
 """
 from pathlib import Path
 
@@ -21,21 +23,19 @@ ANGLES = 4
 TONE_SIGMA = 3.0
 # A distribution is kept as its percentiles at these points: every half percent, and closer still in both tails.
 PROBS = np.concatenate([[0, 0.01, 0.05, 0.1, 0.25, 0.5], np.linspace(1, 99, 197), [99.5, 99.75, 99.9, 99.95, 99.99, 100]])
-WINDOW_MU = 0.8                   # the bands' curves are measured where mu exceeds this: within 0.6 solar radii of disk center
-DISK_MU = 0.3                     # the tone is matched where mu exceeds this: the disk without its outermost rim
 
 
-def _frequency(size):
-    f = np.fft.fftfreq(size)
-    fy, fx = np.meshgrid(f, f, indexing='ij')
+def _frequency(shape):
+    rows, cols = shape
+    fy, fx = np.meshgrid(np.fft.fftfreq(rows), np.fft.fftfreq(cols), indexing='ij')
     return fx, fy
 
 
-def filters(size):
-    """List of (name, transfer function); the transfer functions sum to one."""
-    fx, fy = _frequency(size)
+def filters(shape):
+    """List of (name, transfer function) for maps of `shape` (rows, cols); the transfer functions sum to one."""
+    fx, fy = _frequency(shape)
     k2 = fx * fx + fy * fy
-    low = [np.ones((size, size))] + [np.exp(-k2 * (2 * np.pi * s) ** 2 / 2) for s in SIGMAS]
+    low = [np.ones(shape)] + [np.exp(-k2 * (2 * np.pi * s) ** 2 / 2) for s in SIGMAS]
     theta = np.arctan2(fy, fx)
     out = []
     for k in range(len(SIGMAS)):
@@ -56,8 +56,21 @@ def decompose(field, bank):
     return [np.fft.ifft2(spectrum * transfer).real for _, transfer in bank]
 
 
-def curve(values):
-    return np.percentile(values, PROBS)
+def quantile(values, probs, weights=None):
+    """Quantiles of `values` at `probs` (0..1). With `weights` (the same shape, not negative) every
+    value counts by its weight: the quantiles of the weighted distribution."""
+    if weights is None:
+        return np.quantile(values, probs)
+    order = np.argsort(values, axis=None)
+    v = values.ravel()[order]
+    w = weights.ravel()[order]
+    total = np.cumsum(w)
+    return np.interp(probs, (total - 0.5 * w) / total[-1], v)
+
+
+def curve(values, weights=None):
+    """The distribution of `values` as its percentiles at PROBS (weighted, see quantile)."""
+    return quantile(values, PROBS / 100, weights)
 
 
 def remap(field, have, want):
@@ -75,7 +88,8 @@ def remap(field, have, want):
 
 
 def reference_statistics(real, window, bank):
-    """Per-subband curves, the pixel curve and the curve of the smoothed field, all inside the window."""
+    """Per-subband curves, the pixel curve and the curve of the smoothed field, all inside the window
+    (a boolean mask of the real frame's map)."""
     return {'bands': [curve(band[window]) for band in decompose(real, bank)], 'pixels': curve(real[window]),
             'smooth': curve(blur(real, TONE_SIGMA)[window])}
 
@@ -94,33 +108,35 @@ def stored_curves(bench=False):
         return {name: table[name] for name in table.files if not name.startswith('bench_')}
 
 
-def match(field, window, bank, stats, rounds=3, strength=1.0):
-    """Heeger-Bergen style: pull every subband's distribution, then the tone, to the real frame's."""
+def match(field, weights, bank, stats, rounds=3, strength=1.0):
+    """Heeger-Bergen style: pull every subband's distribution, then the tone, to the real frame's.
+    weights: how much each pixel of the map counts (globe.weights), or None for all alike."""
     for _ in range(rounds):
         parts = decompose(field, bank)
         out = np.zeros_like(field)
         for part, want in zip(parts[:-1], stats['bands'][:-1]):
-            have = curve(part[window])
+            have = curve(part, weights)
             mapped = remap(part, have, want)
             out += part + strength * (mapped - part)
         rest = parts[-1]
-        centered = rest - rest[window].mean()
-        gain = stats['bands'][-1].std() / max(curve(rest[window]).std(), 1e-9)
+        centered = rest - np.average(rest, weights=weights)
+        gain = stats['bands'][-1].std() / max(curve(rest, weights).std(), 1e-9)
         out += centered * gain ** strength + stats['pixels'].mean()
         # Match the tone of the smoothed field only, so fine contrast does not depend on brightness.
         low = blur(out, TONE_SIGMA)
-        have = curve(low[window])
+        have = curve(low, weights)
         field = remap(low, have, stats['smooth']) + (out - low)
     return field
 
 
-def final_tone(field, disk, target):
+def final_tone(field, weights, target):
     """Final tone of a finished surface map: the smoothed map takes the real frame's brightness
-    distribution over the whole disk (fine detail rides along unchanged).
-    field: the surface map; disk: boolean mask of the map's disk; target: curve of the real frame's
+    distribution over its whole disk (fine detail rides along unchanged). Every point of the map is
+    on the sphere, so the whole map takes part, each pixel by its weight.
+    field: the surface map; weights: globe.weights of it; target: curve of the real frame's
     smoothed map over its own disk (tone_target)."""
     low = blur(field, TONE_SIGMA)
-    out = remap(low, curve(low[disk]), target) + (field - low)
+    out = remap(low, curve(low, weights), target) + (field - low)
     # Roll off the extremes softly: the real frame hardly goes below about 95 or above about 250.
     out = np.where(out > 232, 232 + 20 * np.tanh((out - 232) / 20), out)
     out = np.where(out < 108, 108 - 14 * np.tanh((108 - out) / 14), out)
