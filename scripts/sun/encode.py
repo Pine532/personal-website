@@ -13,16 +13,20 @@ along the loop so that this refresh stays small, and the script reports how larg
 
 The frames are full of fine, flickering detail and fresh grain. With x264's usual settings the
 frames between keyframes lose much of it and the texture changes character; its grain tuning keeps
-it, and at CRF 26 the files are no larger than the usual settings give at CRF 23. A file of 1280 px
-or less is for screens that show it at no more than its own size, and gets CRF 28: about 5 MB.
+it. Since the Sun turns, the whole disk moves every frame (about 10 px at its middle at 2048 px) and
+the files come out larger than they did when only the detail changed. Two CRF steps bring them down,
+at a cost of about 1 dB in PSNR (measured on an eight-second turn: the mean error of a decoded frame
+grows from 2.5 to 2.9 index units on the disk). So the default is CRF 28: about 19 MB at 2048 px for
+the 480 frames of one turn. A file of 1280 px or less is for screens that show it at no more than its
+own size, and gets CRF 30: about 6 MB.
 """
 import argparse
 import subprocess
 from pathlib import Path
 
-FRAMES = 240
+FRAMES = 480
 NOTE = ('Simulated Sun: a computer-generated model, not an observation. Magnetic-network model with texture '
-        'statistics calibrated against one NASA SDO AIA 304 frame; 240 frames at 30 fps; the frames loop without a cut.')
+        'statistics calibrated against one NASA SDO AIA 304 frame; 480 frames at 30 fps; the frames loop without a cut.')
 # Keep the texture (-tune grain), and keep the quality even along the loop: no frame borrows bits from the
 # frames after it (mbtree), which would leave the last frames before the loop point the softest.
 TUNE = ['-tune', 'grain']
@@ -96,9 +100,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('frames')
     parser.add_argument('output')
-    parser.add_argument('--crf', type=int, default=None, help='x264 quality: lower is better and larger (default 26, or 28 at 1280 px or less)')
+    parser.add_argument('--crf', type=int, default=None, help='x264 quality: lower is better and larger (default 28, or 30 at 1280 px or less)')
     parser.add_argument('--ffmpeg', default=None, help="the ffmpeg to use (default: imageio-ffmpeg's, else the one on the PATH)")
     parser.add_argument('--size', type=int, default=None, help='resize the frames to this many pixels square (Lanczos)')
     args = parser.parse_args()
-    crf = args.crf if args.crf is not None else (28 if args.size and args.size <= 1280 else 26)
+    crf = args.crf if args.crf is not None else (30 if args.size and args.size <= 1280 else 28)
     encode(args.frames, args.output, crf, args.ffmpeg or ffmpeg(), args.size)

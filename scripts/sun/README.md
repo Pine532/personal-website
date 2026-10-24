@@ -7,41 +7,65 @@ observation, and the site says so wherever the Sun is credited
 
 ## What the model is
 
-1. **A magnetic network** (`surface.py`, `network.py`). Flux concentrations sit along the edges
-   of random convection cells about 30,000 km across. Ten active regions add bright plage,
+1. **A map of the whole Sun** (`globe.py`). Everything lives on an equirectangular map of the
+   sphere: 4,992 columns of longitude by 2,496 rows of latitude, so one pixel spans 0.00126 solar
+   radii at the equator, 0.7% finer than the real frame's. The map wraps around in longitude, so
+   it has no seam, and every statistic taken over it counts each pixel by the share of the sphere
+   it stands for. A coarser map cannot hold all of the real frame's fine detail: at 4,608 columns
+   (7.6% coarser) the realism test below told a rendered frame from the real one at 0.92.
+2. **A magnetic network** (`surface.py`, `network.py`). Flux concentrations sit along the edges
+   of random convection cells about 30,000 km across. Twenty active regions add bright plage,
    ribbons either side of a polarity inversion line, a dark filament along it, and a dark canopy
-   around it; five filaments cross the quiet Sun. The regions and filaments are placed by hand
-   along two activity belts (`REGIONS`, `FILAMENTS`); the arrangement is the model's own and
-   follows no observation.
-2. **Turbulence, combed along a direction** (`turbulence.py`). Noise is added in every octave
+   around it; ten filaments cross the quiet Sun. They are placed by hand along two activity belts
+   (`REGIONS`, `FILAMENTS`), ten regions and five filaments on each half of the sphere, so that
+   the turning Sun shows a different face as it goes round. The arrangement is the model's own
+   and follows no observation.
+3. **Turbulence, combed along a direction** (`turbulence.py`). Noise is added in every octave
    from one pixel (about 900 km) upward. The finest octaves are stretched along a direction
    field that is random over the quiet Sun and follows the polarity lines and the filaments near
    them. A soft threshold turns the sum into bright clumps and dark lanes.
-3. **Calibration against one real frame** (`calibration.py`, `texture_match.py`). The model's
+4. **Calibration against one real frame** (`calibration.py`, `texture_match.py`). The model's
    map is adjusted toward a set of measurements of one SDO frame: the brightness distribution of
    every scale and orientation, and 1,430 wavelet-scattering statistics (how the detail at each
    scale is arranged at coarser scales, which scales and orientations occur together, whether
    fine detail lines up with coarse edges), separately for quiet and for active areas. The real
-   frame is measured at its disk center and the model over its whole map. The run stops after a
-   set number of steps, and a last step gives the whole disk the real frame's brightness
-   distribution, which moves some of the statistics away again: on the finished map 71.5% of
-   them are within the tolerance the matching works to (3% in a band's amplitude, 5% in its
-   variance) and 85.2% within twice that, against 36.9% before matching. Only the measurements
-   are stored (`reference/*.npz`, 21,857 numbers); no pixel of the frame is used.
-4. **A sphere and a camera** (`camera.py`, `corona.py`). The map is the surface of a sphere that
-   carries a forest of short upright columns: toward the limb the texture thickens, loses its
-   finest detail, and has its dark lanes partly filled by the forest's glow. A fringe of
-   short-lived spicules grows out of the rim, as bright at its foot as the rim it stands on, and
-   stretches of it rise and sink together. Past the edge come a glow whose brightness at each
-   height is calibrated against the same frame, and a few small plumes.
-5. **Change over the loop** (`motion.py`, `render.py`). Most of it happens in place: bright fine
-   detail flares and fades (with its brightness distribution held to the map's, so that the
-   flashes do not add up to more bright specks than the real Sun has), clumps swell and dim, the
-   detail shimmers by a fraction of a pixel, and the spicules rise and vanish. A little is slow
-   sideways drift, slightly more along fibrils near active regions and filaments. Everything is a
-   whole number of cycles per loop, so frame 240 would equal frame 0, and every frame gets a
-   little fresh grain. The real Sun also turns (by about 20 pixels over a clip this long); a loop
-   that closes cannot, so the model does not.
+   frame is measured at its disk center and the model over the whole sphere. The run stops after
+   a set number of steps, and a last step gives the smoothed map, over the whole sphere, the
+   brightness distribution the real frame has over its disk. That moves some of the statistics
+   away again: on the finished map 84.5% of them are within the tolerance the matching works to
+   (3% in a band's amplitude, 5% in its variance) and 97.5% within twice that, against 43.8% and
+   63.2% before matching. Only the measurements are stored (`reference/*.npz`, 21,857 numbers);
+   no pixel of the frame is used.
+5. **The turn** (`camera.py`, `render.py`). The camera sees one half of the sphere at a time,
+   north up. Over one loop the sphere turns once about the vertical axis through its middle:
+   frame k reads the map at each longitude less 360 degrees × k / 480, so features come in at the
+   left edge, cross the disk, and go out at the right, as SDO shows the Sun. One turn is 480
+   frames, sixteen seconds at 30 fps. The real Sun turns once in about 27 days, so this turn is
+   about 150,000 times as fast: it is the site's own motion, chosen for the look of it, and it
+   comes from no data. Toward the poles the map's pixels narrow east-west, which would show the
+   texture as streaks that fan into each pole. So `render.py prepare` lays the caps above 38
+   degrees of latitude out afresh (fully from 52 degrees), from a quiet patch near the equator
+   (`globe.even_caps`). At the disk center the picture reproduces the map's texture statistics
+   exactly.
+6. **A forest and a limb** (`camera.py`, `corona.py`). The sphere carries a forest of short
+   upright columns: toward the limb the texture thickens, loses its finest detail, and has its
+   dark lanes partly filled by the forest's glow. Near the limb the texture is also drawn out
+   along the radius and sharpened across it, as the real frame's is (`Camera.reshape`). A fringe
+   of short-lived spicules grows out of the rim, as bright at its foot as the rim it stands on,
+   and stretches of it rise and sink together. Past the edge come a glow and a few small plumes.
+   As the Sun turns, what stands at the limb changes, so the glow's level and height, its lumps,
+   and the spicules' heights are worked out again in every frame from the rim the camera shows
+   then, and in every frame each half of the limb takes the real frame's brightness distribution
+   at each height.
+7. **Change in place** (`motion.py`, `render.py`). Besides the turn, most of the change happens
+   in place: bright fine detail flares and fades (with its brightness distribution held to the
+   map's, so that the flashes do not add up to more bright specks than the real Sun has), clumps
+   swell and dim, the detail shimmers by a fraction of a pixel, and the spicules rise and vanish.
+   A little is slow sideways drift, slightly more along fibrils near active regions and
+   filaments. This change, with the fringe's and the glow's, runs on a cycle of 240 frames, eight
+   seconds, so it repeats twice per turn and the slower turn does not slow it. Everything is a
+   whole number of cycles per loop, so frame 480 would equal frame 0, and every frame gets a
+   little fresh grain.
 
 It is a statistical and geometric model, not a physical simulation of plasma. The features on it
 do not exist on the Sun.
@@ -49,7 +73,7 @@ do not exist on the Sun.
 ## Make it again
 
 The finished videos are in `public/media/`; none of this is needed to build the site. To
-regenerate them you need Python 3.12 or newer, a machine with 16 GB of memory, and about 3 GB of
+regenerate them you need Python 3.12 or newer, a machine with 16 GB of memory, and about 6 GB of
 free disk space. On this Mac the system's `python3` is 3.9, so the first command names
 Anaconda's Python 3.13. Run these from the project root, one line at a time:
 
@@ -65,19 +89,30 @@ npm run assets
 npm run check
 ```
 
-| Step | What it makes | Time on an Apple M3 laptop |
+The times below were taken on this Mac (an Apple M3 laptop with 16 GB) in October 2026, with
+other work running beside it.
+
+| Step | What it makes | Time |
 | --- | --- | --- |
-| `surface.py` | the starting map (`surface-start.npy`) and the model's direction fields (`fields.npz`) | about 3 minutes |
-| `texture_match.py` | the matched map (`surface.npy`) | about 40 minutes on the GPU |
-| `render.py all` | 240 frames at 2048 px (`frames-2048/`), in four processes of about 3 GB each (most of it shared) | about 10 minutes |
-| `encode.py` | the two H.264 files (x264 with its grain tuning, CRF 26 for the large file and 28 for the small one) | under a minute each |
+| `surface.py` | the starting map (`surface-start.npy`) and the model's direction fields (`fields.npz`) | about 8 minutes |
+| `texture_match.py` | the matched map (`surface.npy`) | about 2.5 hours on the GPU |
+| `render.py all` | the prepared maps (about a minute), then 480 frames at 2048 px (`frames-2048/`) in four processes, which need about 12 GB together | about 45 minutes |
+| `encode.py` | the two H.264 files (x264 with its grain tuning, CRF 28 for the large file and 30 for the small one) | under a minute each |
 | `npm run assets` | the stills, the icons, and the link-preview image | seconds |
 
-`references/` is not in version control. `references/sun-simulation/` holds the surface the
-shipped videos were rendered from (`surface-start.npy`, `surface.npy`, `fields.npz`): to change
-only the camera, the corona, or the motion, copy that folder and start at `render.py`.
-`surface.py` and `texture_match.py` refuse to write into a folder that already holds a
-`surface.npy`.
+The turning Sun moves the whole disk in every frame, so its files are larger than those of a Sun
+that only changes in place. They are encoded at a CRF two steps higher than before, which costs
+about 1 dB of quality (`encode.py` says why). The shipped files are 18,912,381 bytes (2048 px) and 5,876,744 bytes
+(1280 px).
+
+`references/` is not in version control. `references/sun-globe-4992/` holds the surface the
+shipped videos were rendered from (`surface-start.npy`, `surface.npy`, `fields.npz`), with the
+prepared maps and the frames beside them: about 5.4 GB in all. To change only the camera, the
+corona, or the motion, copy those three files into a new folder and start at `render.py all`.
+`render.py all` starts afresh; with `--resume` it keeps the frames already rendered and renders
+only the missing ones (unless the maps of the current `surface.npy` have not been prepared yet,
+when it starts afresh too). `surface.py` and `texture_match.py` refuse to write into a folder
+that already holds a `surface.npy`; `--force` replaces it.
 
 What repeats exactly, and what does not:
 
@@ -89,7 +124,9 @@ What repeats exactly, and what does not:
   statistics.
 
 To change the Sun, edit `REGIONS` and `FILAMENTS` or `PARAMETERS['seed']` in `surface.py`, and
-`PLUMES` in `render.py`.
+`PLUMES` in `render.py`. The pace of the turn is the length of the loop: `FRAMES` in `render.py`
+and in `encode.py` (480 frames, sixteen seconds). It must be a whole number of `CYCLE`s in
+`render.py`, the 240 frames of the change in place.
 
 ## The reference measurements
 
@@ -114,62 +151,78 @@ The generating steps read only these files, never the frame.
 `realism.py` trains a classifier to tell patches of one picture from patches of another, using
 wavelet-scattering statistics, and scores it on patches it has not seen (0.5 means it cannot tell
 them apart, 1.0 that it always can). The patches are taken within 0.6 solar radii of the disk
-center. Its second argument is a work folder (the surface map is scored) or another picture of
-the whole Sun:
+center. Its second argument is a work folder (the center of its surface map is scored) or another
+picture of the whole Sun:
 
 ```sh
-.venv-sun/bin/python scripts/sun/realism.py public/media/sun-aia304-desktop.webp references/sun-simulation
-.venv-sun/bin/python scripts/sun/realism.py frame-000.png frame-120.png
+.venv-sun/bin/python scripts/sun/realism.py public/media/sun-aia304-desktop.webp references/sun-globe-4992
+.venv-sun/bin/python scripts/sun/realism.py frame-000.png frame-240.png
 ```
 
-Measured on October 2, 2026. "The calibration frame" is the NASA still the model was calibrated
-on. Video frames were decoded from the two large files in the same way. Frame 0 of each video is
-its keyframe; the other frames are coded as changes from their neighbours, which alters their
-texture a little.
+Measured on October 17, 2026, on the 4,992-column map and the 480-frame files. "The calibration
+frame" is the NASA still the model was calibrated on. Video frames were decoded from the two large
+files in the same way. Frame 0 of each video is its keyframe; the other frames are coded as
+changes from their neighbours, which alters their texture a little. The rows that compare NASA
+frames with each other were measured on October 2, 2026, and do not depend on the model.
 
 | Compared | Score |
 | --- | --- |
-| The surface map against the calibration frame | 0.61 |
-| A rendered frame (0), before compression, against the calibration frame | 0.68 |
-| The finished video's frame 0 against the NASA video's frame 0 | 0.77 |
-| The finished video's frames 100, 120, 180 against the NASA video's frames 60, 120, 180 | 0.87 to 0.92 |
+| The surface map against the calibration frame | 0.63 |
+| A rendered frame (0), before compression, against the calibration frame | 0.84 |
+| The far side, half a turn later (rendered frame 240), against the calibration frame | 0.82 |
+| The finished video's frame 0 against the NASA video's frame 0 | 0.87 |
+| The finished video's frames 120, 240, 360 against the NASA video's frames 60, 120, 180 (the same share of each loop) | 0.92 to 0.94 |
+| For scale: the finished video's frames 120 and 360, half a turn apart, against each other | 0.67 |
 | For scale: the calibration frame against the NASA video's frames 60, 120, 180 | 0.76 to 0.82 |
 | For scale: the NASA video's frames 60, 120, 180 against each other | 0.60 to 0.63 |
 | For scale: the NASA video's frame 0 against its frames 120 and 239 | 0.75 to 0.76 |
-| For scale: the finished video's frames 60 and 180 against each other | 0.55 |
-| The floor: one picture in two forms (a rendered frame and the same frame after compression; a video's frame 0 and its still) | 0.65 to 0.73 |
+| The floor: one picture in two forms (a rendered frame and the same frame after compression; a video's frame 0 and its still) | 0.63 to 0.72 |
 
-Against the frame it was calibrated on, the model is about as close as this test can measure.
-Against the rest of the real footage it is told apart easily: 0.87 to 0.92, where real frames
-score 0.60 to 0.63 against each other. Part of that distance lies between the calibration frame
-and the other frames themselves (0.76 to 0.82), and the rest is the model's own.
+Against the frame it was calibrated on, the surface map is about as close as this test can
+measure. A rendered frame is told apart more easily: 0.82 to 0.84 here, and 0.84 to 0.89 at six
+points of the turn on an earlier eight-second render of the same map. (The October 2 model, a
+square map of one hemisphere that did not turn, scored 0.68 here.) What the classifier leans on
+is the broader texture of the rendered frame, near the equator more than away from it: in the
+band 16 pixels across, at one diagonal, the model's detail is stronger than the real frame's, and
+its brightness is less skewed. It is not the map's pixel, which is now finer than the real
+frame's, nor the polar caps; its cause has not been found. Against the rest of the real footage
+the finished video is told apart easily: 0.92 to 0.94, where real frames score 0.60 to 0.63
+against each other. Part of that distance lies between the calibration frame and the other
+frames themselves (0.76 to 0.82), and the rest is the model's own.
 
 Other measures, from the finished frames against the real ones:
 
 - Around the limb the mean brightness at each height, from 0.03 solar radii inside the edge to
-  0.18 outside it, is within 4.5 units (of 255) of the calibration frame's in every eighth frame of
-  the loop; within 3.3 outside the edge, and within 2.2 further inside than 0.012 solar radii.
-- The edge of the disk falls by 6.7 units per pixel over 6.5 pixels (the real frame: 6.6 over
-  6.5), and moves by about 1 pixel within a second (the NASA footage: 1.5).
-- Patches 32 pixels across slide 0.55 and 0.94 pixels against their surroundings in 10 and 30
-  frames (the NASA footage with its rotation taken out: 0.50 and 0.90). The picture changes by
-  1.5, 3.7, and 8.6 units on average over 1, 4, and 30 frames (the NASA footage, rotation
-  included: 1.9, 5.1, and 10.2).
-- No 15-degree stretch of the glow changes by more than 5 red levels within a second, as in the
-  NASA footage.
-- The compressed files restart on their keyframe: from the last frame to the first the picture
-  changes 2.4 times as much as from one frame to the next. In the rendered frames that step is
-  the same as any other.
+  0.18 outside it, is within 2.2 units (of 255) of the calibration frame's in eight frames spread
+  evenly over the loop; within 1.8 outside the edge, and within 0.7 further inside than 0.012
+  solar radii.
+- The limb is lit evenly as the Sun turns. In frames 0, 120, 240, and 360 the glow just outside
+  the edge (1.00 to 1.02 solar radii) is as bright on the left as on the right to within 12%, in
+  the rendered frames and in the decoded video alike.
+- Near the limb the texture has the real frame's shape. At 0.9 solar radii its fine detail
+  changes 1.8 to 2.2 times as strongly along the radius as across it, against 1.9 to 2.1 in the
+  real frame (measured on an eight-second render of the same map).
+- The glow beyond the edge changes far faster than the real one's. In 15-degree stretches from
+  0.005 to 0.10 solar radii above the edge, a stretch changes by up to 70 red levels (of 255)
+  within a second, and 95% of the time by 31 or less; in the NASA footage by up to 7.7, and 95%
+  of the time by 2.9 or less. The ring as a whole changes by under one level. The glow follows
+  the turn, so what stands at the limb comes and goes within seconds.
+- The compressed files restart on their keyframe, and from the last frame to the first the
+  picture changes 1.0 times as much as from one frame to the next: the restart does not show.
+- The video stays within the limits for flashing (WCAG 2.3.1): any patch of the screen changes
+  in brightness at most once a second, where six changes (three flashes) would fail, and its
+  color swings are far below a red flash.
 
 The test has limits. Neighboring patches overlap, which raises every score a little. It looks only
-at these statistics. An expert eye would still see what they do not measure: the Sun does not
-turn, the active regions lack the fine anatomy of real ones (narrow beaded ribbons, threaded
+at these statistics. An expert eye would still see what they do not measure: the model turns about
+150,000 times as fast as the Sun, the glow beyond its edge changes much faster than the real
+one's, the active regions lack the fine anatomy of real ones (narrow beaded ribbons, threaded
 filament channels), and nothing erupts.
 
 ## Which Sun the site shows
 
-`src/sun-source.json` holds `"simulated"` or `"observed"`. The label in the hero, the footer
-line, the note it links to, the stills, the icons and the link-preview credit all follow that one
+`src/sun-source.json` holds `"simulated"` or `"observed"`. The label in the hero, the published
+note, the stills, the icons, and the link-preview image and its description all follow that one
 setting, and the build publishes only that Sun's files. After changing it, or after replacing a
 video, run `npm run assets` and `npm run check`: the build refuses to run while a still was taken
 from an earlier version of its video, or while the icons were made from the other Sun.
