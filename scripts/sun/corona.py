@@ -6,6 +6,13 @@ is unwrapped onto the strip, the off-limb scene is added, the brightness distrib
 is calibrated against the real frame's (reference/limb-quantiles.npz, which reference.py makes), and
 the strip is wrapped back into the picture.
 
+The Sun turns once per loop, so what stands at the limb changes. Whatever depends on how active the limb
+is (the glow's height and brightness, its lumps, the spicules' heights) is worked out again in every frame
+from the rim the camera shows then, and the calibration is redone in every frame. Only the field lines'
+clusters, which are traced once, stay where they were put; they are spread evenly over both sides.
+The fringe and the glow also change in place. That change runs on the cycle of the surface's own change,
+eight seconds, twice per turn (render.py): the `phase` given to scene and frame is the phase of that cycle.
+
 Brightness is the "index" 0..255, which behaves like log intensity; emissions add as
 index = S * log(sum(exp(index_k / S))).
 """
@@ -23,18 +30,28 @@ QUANTILES = np.array([1, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 7
 SPICULES = ((3200, 0.0085, 0.35, 0.0012, 0.0030), (2600, 0.0055, 0.40, 0.0010, 0.0028))
 TALLEST_SPICULE = 0.016           # solar radii: taller ones would stand out as single blades
 FRINGE_BLUR = 1.4                 # strip pixels
-# (cycles per loop, strength) of the glow's changing lumps: slow, so that no patch of the glow pulses.
+# (cycles per cycle, strength) of the glow's changing lumps: slow, so that no patch of the glow pulses.
 LUMP_HARMONICS = ((1, 0.12), (2, 0.14), (3, 0.08))
-FINE_CYCLES, COARSE_CYCLES = 3, 2                              # how many times per loop the threads' brightness travels one ripple
+FINE_CYCLES, COARSE_CYCLES = 3, 2                              # how many times per cycle the threads' brightness travels one ripple
 SMOOTH_DEGREES = 2.0              # brightness is calibrated on structure broader than this; finer structure is the model's own
 EDGE_ZONE = (-0.024, -0.012)      # heights between which the camera's own fine detail gives way to the strip's (see frame)
 RIM_ZONE = (-0.016, -0.006)       # heights over which the disk's brightness just inside its edge is taken
 FRINGE_STEP, FRINGE_FALL = 2.0, 44.0     # a spicule starts this much dimmer than the rim under it and fades by this much to its tip (index)
 FRINGE_FOOT = (-0.013, -0.008)    # heights over which the fringe comes in, inside the disk's edge
 CALIBRATION_ROWS = 1.5            # the calibration's correction is smoothed over this many strip rows
-# Stretches of the fringe a degree or so wide rise and sink together: (cycles per loop) of each part, and how much
+# Stretches of the fringe a degree or so wide rise and sink together: (cycles per cycle) of each part, and how much
 # of its height the fringe gains or loses with them (rms).
 SURGE_CYCLES, SURGE = (4, 7, 11, 16), 0.5
+# How much of the limb's activity comes from the frame's own rim; the rest is the same amount spread evenly over
+# the low latitudes of both sides. With all of it, a side that holds an active region would take every one of
+# the real frame's brightest values in the calibration and leave the opposite side dark.
+OWN_SHARE = 0.4
+# Stretches of the glow a little brighter or fainter than the rim under them: how much (rms share of the activity)
+# and how wide (degrees). Which stretches changes over the cycle (see activity).
+WANDER, WANDER_DEGREES = 0.12, 6.0
+# The right and the left half of the limb are calibrated apart; their two maps blend over a band this wide (in
+# the cosine of the angle, here +-15 degrees) around the poles, where the glow is faint.
+HALF_BLEND = 0.26
 
 
 # ------------------------------------------------------------------ small tools
@@ -91,6 +108,12 @@ def raster_jets(theta, width, height, n):
     profile = np.zeros(n, dtype=np.float32)
     np.maximum.at(profile, cell % n, value.astype(np.float32))
     return profile
+
+
+def smooth_angle(values, degrees, d):
+    """Gaussian blur of a profile around the limb (d radians per entry), `degrees` the sigma; periodic."""
+    f = np.fft.rfftfreq(len(values))
+    return np.fft.irfft(np.fft.rfft(values) * np.exp(-(f * (np.radians(degrees) / d) * TAU) ** 2 / 2), len(values))
 
 
 def smoothstep(x):
@@ -187,6 +210,10 @@ class Corona:
         self.from_y = (half - 0.5 - radius * np.sin(self.theta)[None, :] * half * LIMB).astype(np.float32)
         self.outside = r >= 1 + H1 - 2 * d
         self.real = real_quantiles(self.h)
+        right = np.cos(self.theta)
+        self.halves = (right > 0, right <= 0)
+        weight = smoothstep((right + HALF_BLEND) / (2 * HALF_BLEND)).astype(np.float32)
+        self.shares = (weight, 1 - weight)      # how much of each half's map every angle takes
         self.model = None                       # set by calibrate()
         self.static = None
 
@@ -200,23 +227,44 @@ class Corona:
         fy = y - y0
         return (image[y0, x0] * (1 - fx) + image[y0, x0 + 1] * fx) * (1 - fy) + (image[y0 + 1, x0] * (1 - fx) + image[y0 + 1, x0 + 1] * fx) * fy
 
+    # -------------------------------------------------------------- the limb's activity
+    def local_activity(self, disk_strip):
+        """How active each stretch of the limb is in one frame, 0 (quiet) and up: where the surface is bright
+        just inside the limb in that frame's picture."""
+        h, d = self.h, self.d
+        brightness = disk_strip[(h > -0.055) & (h < -0.008)].mean(axis=0)
+        local = np.clip((smooth_angle(brightness, 6.0, d) - 150) / 34, 0, 1.2)
+        return 0.35 * smooth_angle(local, 6.0, d) + 1.0 * smooth_angle(local, 24.0, d)
+
+    def activity(self, disk_strip, phase):
+        """Activity around the limb at this phase, 0 .. 1.1. It follows the Sun's turn: the glow rises over an
+        active region as the region comes to the limb and subsides as it leaves."""
+        st = self.static
+        local = OWN_SHARE * self.local_activity(disk_strip) + (1 - OWN_SHARE) * st['typical']
+        # The glow swells gently and widely over active longitudes and is thin over the poles.
+        low_latitude = np.cos(self.theta) ** 2
+        activity = local + 0.22 * low_latitude ** 1.5 + 0.03
+        # Once per cycle, so that no stretch stays brighter than the rest for long.
+        first, second = st['wander']
+        wander = first * np.float32(np.cos(TAU * phase)) + second * np.float32(np.sin(TAU * phase))
+        return np.clip(activity * (1 + WANDER * wander), 0, 1.1).astype(np.float32)
+
     # -------------------------------------------------------------- static parts
     def build(self, disk_strip):
         """Everything that does not change during the loop. disk_strip: the unwrapped disk at phase 0."""
         rng = np.random.default_rng(self.seed)
         cols, rows, d, theta, h = self.cols, self.rows, self.d, self.theta, self.h
         st = {}
-        # Activity around the limb, 0 (quiet) .. 1: where the surface is bright just inside the limb.
-        inside = (h > -0.055) & (h < -0.008)
-        brightness = disk_strip[inside].mean(axis=0)
-        f = np.fft.rfftfreq(cols)
-        smooth = lambda v, degrees: np.fft.irfft(np.fft.rfft(v) * np.exp(-(f * (np.radians(degrees) / d) * TAU) ** 2 / 2), cols)
-        local = np.clip((smooth(brightness, 6.0) - 150) / 34, 0, 1.2)
-        # The glow swells gently and widely over active longitudes and is thin over the poles.
-        low_latitude = np.cos(theta) ** 2
-        activity = 0.35 * smooth(local, 6.0) + 1.0 * smooth(local, 24.0) + 0.22 * low_latitude ** 1.5 + 0.03
-        activity = np.clip(activity * (1 + 0.25 * noise1d(cols, np.radians(20) / d, rng)), 0, 1.1)
-        st['activity'] = activity.astype(np.float32)
+        self.static = st
+        st['wander'] = (noise1d(cols, np.radians(WANDER_DEGREES) / d, rng),
+                        noise1d(cols, np.radians(WANDER_DEGREES) / d, np.random.default_rng(self.seed + 3000)))
+        # The even share of the activity: as much as the rim shows at phase 0, at low latitudes on both sides.
+        even = (np.cos(theta) ** 2) ** 1.5 + 0.1
+        st['typical'] = (even * self.local_activity(disk_strip).mean() / even.mean()).astype(np.float32)
+        # The field lines are traced once and cannot follow the turn, so their strong clusters are put where the
+        # even share is, as many as the activity at phase 0 calls for: no side keeps the loops of a region that
+        # happened to stand there at phase 0.
+        activity = even * np.sqrt(np.mean(self.activity(disk_strip, 0.0) ** 2) / np.mean(even ** 2))
 
         # Magnetic sources under the limb: network elements, and stronger clusters where the limb is active.
         count = 190
@@ -241,7 +289,7 @@ class Corona:
         st['coarse'] = lic_abc(coarse_noise, ux, uy, 40)
         lump = blur_rect(rng.normal(size=(rows, cols)), 0.03 / d, np.radians(5) / d)
         st['lump'] = lump / lump.std()
-        # The same kind of lumps, but coming and going: a few harmonics of the loop, so it still closes.
+        # The same kind of lumps, but coming and going: a few harmonics of the cycle, so the loop still closes.
         drift_rng = np.random.default_rng(self.seed + 500)
         st['drift'] = []
         for cycles, strength in LUMP_HARMONICS:
@@ -251,15 +299,16 @@ class Corona:
         st['blob'] = blob / blob.std()
 
         # The fringe: a dense palisade of short spicules, nearly upright, clumped, taller over active stretches.
-        # Each one rises and falls a whole number of times per loop and is gone for part of every cycle,
+        # Each one rises and falls a whole number of times per cycle and is gone for part of each rise and fall,
         # so the fringe is renewed all the time instead of swaying.
         clump = np.exp(0.5 * noise1d(cols, 0.007 / d, rng) + 0.35 * noise1d(cols, 0.03 / d, rng))
         layers = []
         for count, mean_height, spread, w_lo, w_hi in SPICULES:
             where = rng.uniform(0, TAU, count)
             local = (where / d).astype(int) % cols
-            layers.append(dict(theta=where, width=rng.uniform(w_lo, w_hi, count),
-                               height=np.minimum(mean_height * rng.lognormal(0, spread, count) * clump[local] * (1 + 0.5 * activity[local]), TALLEST_SPICULE),
+            # The height before the activity's share, which scene adds in every frame.
+            layers.append(dict(theta=where, width=rng.uniform(w_lo, w_hi, count), cell=local,
+                               height=(mean_height * rng.lognormal(0, spread, count) * clump[local]).astype(np.float32),
                                cycles=rng.integers(3, 13, count), start=rng.uniform(0, TAU, count), away=rng.uniform(-0.3, 0.6, count),
                                tilt=(0.22 * noise1d(cols, np.radians(6) / d, rng) + 0.12 * noise1d(cols, np.radians(1.5) / d, rng)).astype(np.float32)))
         st['spicules'] = layers
@@ -286,13 +335,13 @@ class Corona:
             items.append(dict(mask=mask.astype(np.float32), index=float(item['index']), texture=float(item.get('texture', 6.0)),
                               threshold=float(item.get('threshold', 0.25)), sharp=float(item.get('sharp', 0.6))))
         st['items'] = items
-        self.static = st
         return st
 
     # -------------------------------------------------------------- per frame
     def scene(self, disk_strip, phase):
         """The strip before calibration: the disk and its fringe, plus the glow (no plumes yet)."""
         st, h = self.static, self.h
+        a = self.activity(disk_strip, phase)[None, :]
         turn = lambda cycles: (np.float32(np.cos(TAU * cycles * phase)), np.float32(np.sin(TAU * cycles * phase)))
         co, si = turn(FINE_CYCLES)
         fine = st['fine'][0] + st['fine'][1] * co + st['fine'][2] * si
@@ -304,7 +353,6 @@ class Corona:
         for cycles, strength, cosine, sine in st['drift']:
             co, si = turn(cycles)
             moving += strength * (cosine * co + sine * si)
-        a = st['activity'][None, :]
         hh = h[:, None]
         up = np.maximum(hh, 0)
         level = (82 + 80 * a) * (1 - up / (0.058 + 0.185 * a))
@@ -323,7 +371,9 @@ class Corona:
         in_rim = (h > RIM_ZONE[0]) & (h < RIM_ZONE[1])
         f = np.fft.rfftfreq(self.cols)
         rim = np.fft.irfft(np.fft.rfft(disk_strip[in_rim].mean(axis=0)) * np.exp(-(f * (np.radians(1.0) / self.d) * TAU) ** 2 / 2), self.cols)[None, :]
-        fringe = np.zeros((low, self.cols), dtype=np.float32)
+        # Kept in double precision: the fringe spans ten decades, and a single-precision transform in the blur
+        # below would leave ringing of thousands on the faint glow above it, where the strip holds tens.
+        fringe = np.zeros((low, self.cols), dtype=np.float64)
         surge = np.zeros(self.cols, dtype=np.float32)
         for cycles, cosine, sine in st['surge']:
             co, si = turn(cycles)
@@ -331,7 +381,8 @@ class Corona:
         surge = np.clip(1 + SURGE * surge / np.sqrt(len(st['surge'])), 0.3, 2.0)[None, :]
         for layer in st['spicules']:
             life = np.clip((np.sin(TAU * layer['cycles'] * phase + layer['start']) - layer['away']) / (1 - layer['away']), 0, 1)
-            skyline = raster_jets(layer['theta'], layer['width'], layer['height'] * life ** 0.7, st['fine_cols'])
+            height = np.minimum(layer['height'] * (1 + 0.5 * a[0, layer['cell']]), TALLEST_SPICULE)
+            skyline = raster_jets(layer['theta'], layer['width'], height * life ** 0.7, st['fine_cols'])
             top = lerp1d(skyline, position - layer['tilt'][None, :] * np.maximum(hl, 0) * (st['fine_cols'] / TAU)) * surge
             above = hl + 0.004
             inside = smoothstep((top + 0.004 - above) / (0.0015 + 0.25 * top) + 0.5) * smoothstep((hl - FRINGE_FOOT[0]) / (FRINGE_FOOT[1] - FRINGE_FOOT[0]))
@@ -349,31 +400,36 @@ class Corona:
         return np.fft.irfft(np.fft.rfft(strip, axis=1) * gain[None, :], self.cols, axis=1).astype(np.float32)
 
     def calibrate(self, scene_strip):
-        """Remember this scene's brightness quantiles at every height (done once, at phase 0).
-        They are taken from the smoothed strip, like the real frame's (reference.py)."""
-        self.model = np.percentile(self.smooth(scene_strip), QUANTILES, axis=1).T
+        """Remember this scene's brightness quantiles at every height, in the right and in the left half of
+        the limb (done in every frame). They are taken from the smoothed strip, like the real frame's
+        (reference.py). The calibration ranks brightness: taken over the whole limb, a side that holds an
+        active region would take all of the real frame's brightest values. Each half gets the real frame's
+        whole distribution instead, and so does the whole limb."""
+        broad = self.smooth(scene_strip)
+        model = np.stack([np.percentile(broad[:, half], QUANTILES, axis=1).T for half in self.halves])
         # Keep the tables strictly increasing so the maps are well defined.
-        self.model = np.maximum.accumulate(self.model + np.arange(len(QUANTILES))[None, :] * 1e-3, axis=1)
+        self.model = np.maximum.accumulate(model + np.arange(len(QUANTILES))[None, None, :] * 1e-3, axis=2)
 
     def apply_calibration(self, scene_strip):
         """Give the smoothed strip the real frame's brightness distribution at every height; the fine
         structure (spicules, threads, the disk's own texture) is carried over unchanged."""
         broad = self.smooth(scene_strip)
-        out = np.empty_like(scene_strip)
-        real, model = self.real, self.model
-        for k in range(self.rows):
-            have, want = model[k], real[k]
-            row = broad[k]
-            mapped = np.interp(row, have, want)
-            hi = row > have[-1]
-            if hi.any():
-                slope = np.clip((want[-1] - want[-3]) / max(have[-1] - have[-3], 1e-3), 0.3, 1.5)
-                mapped[hi] = want[-1] + (row[hi] - have[-1]) * slope
-            lo = row < have[0]
-            if lo.any():
-                slope = np.clip((want[2] - want[0]) / max(have[2] - have[0], 1e-3), 0.3, 1.5)
-                mapped[lo] = want[0] + (row[lo] - have[0]) * slope
-            out[k] = mapped
+        out = np.zeros_like(scene_strip)
+        real = self.real
+        for model, share in zip(self.model, self.shares):
+            for k in range(self.rows):
+                have, want = model[k], real[k]
+                row = broad[k]
+                mapped = np.interp(row, have, want)
+                hi = row > have[-1]
+                if hi.any():
+                    slope = np.clip((want[-1] - want[-3]) / max(have[-1] - have[-3], 1e-3), 0.3, 1.5)
+                    mapped[hi] = want[-1] + (row[hi] - have[-1]) * slope
+                lo = row < have[0]
+                if lo.any():
+                    slope = np.clip((want[2] - want[0]) / max(have[2] - have[0], 1e-3), 0.3, 1.5)
+                    mapped[lo] = want[0] + (row[lo] - have[0]) * slope
+                out[k] += share * mapped
         # Inside the disk the calibration fades in over the last few percent of the radius.
         weight = smoothstep((self.h[:, None] + 0.055) / 0.03)
         # The correction is smoothed across heights too, so one row's accidents do not show as rings.
@@ -386,13 +442,13 @@ class Corona:
 
     def frame(self, disk_image, phase):
         """The finished picture (index) from the camera's picture of the disk. The first frame it is
-        given sets up the static parts and the calibration, so that must be the frame of phase 0."""
+        given sets up the static parts, so that must be the frame of phase 0."""
         disk_strip = self.unwrap(disk_image)
         if self.static is None:
             self.build(disk_strip)
         scene, fine, coarse, lumps = self.scene(disk_strip, phase)
-        if self.model is None:
-            self.calibrate(scene)
+        # Calibrated in every frame: the limb's activity, and with it the scene, changes as the Sun turns.
+        self.calibrate(scene)
         strip = self.apply_calibration(scene)
         # The glow's changing lumps go in after the calibration, which would stretch them severalfold over the
         # active limb and make whole patches of the glow pulse.
