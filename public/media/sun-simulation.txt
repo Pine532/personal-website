@@ -20,12 +20,13 @@ the same coloring.
 HOW IT WAS MADE
 
 1. A magnetic network. Magnetic flux concentrations are scattered along the
-   edges of convection cells about 30,000 km across, as on the real Sun. Ten
-   active regions are added (bright patches, with ribbons either side of the
-   line where the magnetic polarity changes and a dark filament along it),
-   and five dark filaments in the quiet areas. They are placed by hand along
-   two belts north and south of the equator; the arrangement is the model's
-   own and follows no observation.
+   edges of convection cells about 30,000 km across, as on the real Sun.
+   Twenty active regions are added (bright patches, with ribbons either side
+   of the line where the magnetic polarity changes and a dark filament along
+   it), ten on each half of the sphere, and ten dark filaments in the quiet
+   areas. They are placed by hand along two belts north and south of the
+   equator, so that the turning Sun shows a different face as it goes round;
+   the arrangement is the model's own and follows no observation.
 
 2. Turbulence, combed along a direction. Random noise is added at every
    scale from one pixel (about 900 km) upward, and its finest scales are
@@ -45,22 +46,42 @@ HOW IT WAS MADE
    frame: about 22,000 numbers. No pixel of any observation is in the
    picture.
 
-4. A sphere and a camera. The map is wrapped on a sphere that carries a
-   forest of short upright columns, so the texture thickens and softens
-   toward the edge, its dark lanes partly fill in there, and it ends in a
-   ragged fringe of spicules that grows out of it. Beyond the edge are a glow
-   and a few small plumes.
+4. A sphere and a camera. The map is a picture of the whole sphere, all the
+   way round, and the camera sees one half of it at a time. Over each loop
+   the picture turns through the whole map once. Toward the poles the map's
+   texture is laid out afresh, so that it has the same grain there as
+   everywhere else instead of streaks that close in on each pole. The sphere
+   carries a forest of short upright columns, so the texture thickens and
+   softens toward the edge, its dark lanes partly fill in there, and it ends
+   in a ragged fringe of spicules that grows out of it. Near the edge the
+   texture is also drawn out along the radius and kept sharp across it, as
+   in the real frame: seen at a slant, the glowing layer is looked through,
+   not seen as a thin skin. Beyond the edge are a glow and a few small
+   plumes. The glow follows the turn: it is brighter where active ground
+   stands at the edge.
 
-5. Motion. Most of the change happens in place: small bright features flare
-   and fade, larger clumps swell and dim, the fine detail shimmers, and the
-   spicules of the fringe rise and vanish. A little of it is slow sideways
-   drift. Everything repeats a whole number of times per loop, so the last of
-   the 240 frames leads back into the first without a cut, and each frame
-   carries a little fresh grain. (Eight seconds at 30 frames a second, played
-   at 1.2 times that pace. The compressed video file restarts on its one
-   keyframe, which is slightly crisper than the frames before it.) The real
-   Sun also turns, by about twenty pixels over a clip this long; a loop that
-   closes cannot, so the simulated Sun does not.
+5. Motion. The sphere turns once in each loop, about the upright axis
+   through its middle, so its features come in at the left edge, cross the
+   disk and go out at the right. Besides that, most of the change happens in
+   place: small bright features flare and fade, larger clumps swell and dim,
+   the fine detail shimmers, and the spicules of the fringe rise and vanish.
+   A little of it is slow sideways drift. This change in place repeats every
+   eight seconds, twice in each turn, so the slower turn does not slow it.
+   Everything repeats a whole number of times per loop, so the last of the
+   480 frames leads back into the first without a cut, and each frame
+   carries a little fresh grain. (Sixteen seconds at 30 frames a second. The
+   compressed video file restarts on its one keyframe, which is slightly
+   crisper than the frames before it.)
+
+THE TURN
+
+The real Sun turns once in about twenty-seven days, about an axis that lies
+across this view, so its features cross the disk from one side to the
+other. The model turns the same way, but once every sixteen seconds: about
+150,000 times as fast. That turn is the page's own motion, chosen for the
+look of it, not a record of the Sun's: its speed comes from no data, and no
+observation is used for any of its pixels. It is drawn into the video
+itself; the page's code turns nothing. Pause motion stops it.
 
 WHAT IT IS NOT
 
@@ -76,24 +97,30 @@ of another by their texture statistics, and scored on patches it had not
 seen: 0.5 means it cannot tell them apart, 1.0 that it always can. The
 patches come from the middle of the disk, within 0.6 of its radius.
 
-- The model's surface against the frame it was calibrated on: 0.61. A
-  finished frame, before video compression: 0.68. For scale, one picture
-  in two forms (a frame before and after compression, or a video's first
-  frame and its still) scores 0.65 to 0.73.
+- The model's surface against the frame it was calibrated on: 0.63. A
+  finished frame, before video compression: 0.84; the far side of the
+  sphere, half a turn later: 0.82. For scale, one picture in two forms
+  (a frame before and after compression, or a video's first frame and
+  its still) scores 0.63 to 0.72.
 - The finished video against the NASA video, like for like: their first
-  frames 0.77; frames from the middle of the loop 0.87 to 0.92. Frames from
-  the middle of the NASA video score 0.60 to 0.63 against each other, and
-  the frame the model was calibrated on scores 0.76 to 0.82 against them.
+  frames 0.87; frames from the middle of the loop 0.92 to 0.94. Frames
+  from the middle of the NASA video score 0.60 to 0.63 against each other,
+  and the frame the model was calibrated on scores 0.76 to 0.82 against
+  them.
 
-So the model is about as close to the frame it was tuned on as this test
-can measure, and further from the rest of the real footage than real frames
-are from each other. The test looks only at those statistics. An expert
-would still see what they do not measure: this Sun does not turn, its
-active regions lack the fine structure of real ones, and nothing erupts.
+So the model's surface is about as close to the frame it was tuned on as
+this test can measure. The finished frames, with the sphere turned, lit and
+seen through its forest, are easier to tell from that frame, and further
+still from the rest of the real footage, more than real frames are from
+each other. The test looks only at those statistics. An expert
+would still see what they do not measure: the model turns far faster than
+the Sun does, the glow beyond its edge brightens and fades much faster than
+the real one's, its active regions lack the fine structure of real ones, and
+nothing erupts.
 
-Around the edge of the disk, in every eighth frame of the loop, the average
-brightness at each height, from just inside the edge to well outside it, is
-within 4.5 levels (of 255) of the real frame's.
+Around the edge of the disk, in eight frames spread evenly over the loop,
+the average brightness at each height, from just inside the edge to well
+outside it, is within 2.2 levels (of 255) of the real frame's.
 
 THE REAL THING
 
@@ -107,11 +134,14 @@ it.
 
 When the simulation is the Sun on show, these are made from its first frame:
 the image shown while the video loads, for reduced motion, and after a media
-failure; the closing image in the Contact section; the link-preview image;
-and the browser icons (square crop around the disk, black sky converted to
-transparency at the small sizes).
+failure; the link-preview image; and the browser icons (square crop around
+the disk, black sky converted to transparency at the small sizes). The page
+shows the Sun in the window's upper-right corner, at most 200 pixels across,
+so it uses the 1280-pixel files only; the 2048-pixel ones stay in the source
+code.
 
 The code that generates all of this is in the site's source code, in
 scripts/sun/.
 
-Typeface: Manrope, SIL Open Font License 1.1 (manrope-OFL.txt beside this file).
+Typefaces: Manrope and Geist Mono, both SIL Open Font License 1.1
+(manrope-OFL.txt and geist-mono-OFL.txt beside this file).
