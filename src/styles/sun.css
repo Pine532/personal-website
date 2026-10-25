@@ -1,0 +1,42 @@
+/* The Sun in the window's upper-right corner (components/CornerSun.tsx). --corner-disc is the width
+   of its disc (styles/base.css); the picture around the disc is wider, since the disc is 79.3% of
+   the picture's half-width (src/media.ts), and it is shown through a sky that keeps the disc and the
+   fringe and lets the black around them go, so the Sun stands over any ground, the light About
+   section's too. It is stacked above the page and beneath the header. */
+:root {
+  --sun-picture: calc(var(--corner-disc) / .793);
+  --sun-sky: radial-gradient(closest-side, #000 80%, rgb(0 0 0 / .82) 83%, rgb(0 0 0 / .55) 86%, rgb(0 0 0 / .3) 89%, rgb(0 0 0 / .12) 92%, transparent 95%);
+}
+.corner-sun { position: fixed; z-index: 20; top: calc(var(--corner-top) - (var(--sun-picture) - var(--corner-disc)) / 2); right: calc(var(--gutter) - (var(--sun-picture) - var(--corner-disc)) / 2); width: var(--sun-picture); height: var(--sun-picture); pointer-events: none; }
+.corner-sun-disc { position: relative; width: 100%; height: 100%; -webkit-mask-image: var(--sun-sky); mask-image: var(--sun-sky); }
+.corner-sun-media { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+/* The still shows once all of it has arrived; the footage covers it once it is playing, and the still
+   is then not kept beneath it for nothing. The blocks the still resolves from lie between the two. */
+.corner-sun-still { opacity: 0; }
+.corner-sun[data-whole='true'] .corner-sun-still { opacity: 1; }
+.corner-sun-pixels { image-rendering: pixelated; opacity: 0; }
+.corner-sun-pixels[data-shown='true'] { opacity: 1; }
+.corner-sun-video { opacity: 0; }
+.corner-sun[data-ready='true'] .corner-sun-video { opacity: 1; }
+.corner-sun[data-ready='true'] .corner-sun-still { visibility: hidden; }
+
+/* Over the light About section the Sun's sky is drawn tighter, to the disc and no further: on that
+   ground the dark of its fringe would show as a halo (hooks/usePageState.ts says when). */
+.site[data-ground='paper'] { --sun-sky: radial-gradient(closest-side, #000 79.5%, transparent 82.5%); }
+
+/* Under the Sun: what it is, and the control for its motion. Once the page has scrolled they stand
+   in dark pills like the header's links (styles/header.css), so they read over whatever passes
+   beneath. Not on a phone, where the Sun sits in the header's row and the footage does not play. */
+.corner-sun-caption { position: fixed; z-index: 20; top: calc(var(--corner-top) + var(--corner-disc) + 14px); right: var(--gutter); display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: calc(var(--corner-disc) + 72px); text-align: right; font-size: 10px; letter-spacing: .12em; color: var(--text); }
+.corner-sun-caption a { padding: 4px 0; color: var(--muted); text-decoration: none; transition: padding 200ms ease, background-color 200ms ease, color 200ms ease; }
+.corner-sun-caption a:hover { text-decoration: underline; }
+.corner-sun-toggle { min-width: 44px; min-height: 28px; padding: 2px 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; text-align: right; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; transition: padding 200ms ease, background-color 200ms ease; }
+.corner-sun-toggle:hover { color: var(--amber); }
+.site[data-scrolled='true'] .corner-sun-caption :is(a, button) { padding-inline: 8px; background: #15150f; }
+.site[data-scrolled='true'] .corner-sun-caption a { color: #b4b2aa; }
+@media (max-width: 700px) {
+  .corner-sun-caption { display: none; }
+}
+@media (forced-colors: active) {
+  .site[data-scrolled='true'] .corner-sun-caption :is(a, button) { border: 1px solid CanvasText; }
+}

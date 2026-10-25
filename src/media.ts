@@ -3,9 +3,8 @@ import selection from './sun-source.json' with { type: 'json' };
 // The Sun on this page exists in two versions: a simulation (scripts/sun/) and NASA's observation
 // (scripts/footage/). sun-source.json chooses one; `npm run assets` then remakes the icons and the
 // link-preview image from it, and the build publishes that version's files only. Each version comes
-// in two sizes. One page view uses one size, so the
-// hero, the closing box, and the preloads that config/site-metadata.ts writes into the page all
-// agree, and nothing is downloaded twice.
+// in two sizes; the page shows the Sun in the window's corner, at most 200 CSS px across
+// (styles/sun.css), so it uses the small one everywhere and only that one is published.
 
 export type SunSource = 'simulated' | 'observed';
 export const SUN_SOURCE: SunSource = selection.source === 'observed' ? 'observed' : 'simulated';
@@ -24,38 +23,26 @@ const MEDIA = {
 } as const;
 
 export const SUN_VARIANTS = MEDIA[SUN_SOURCE];
+/** The Sun's files: the video and its still, the loop's first frame. */
+export const SUN_MEDIA = SUN_VARIANTS.small;
 
 /** Every file of a version: its videos, their stills, the stills' sidecars, and its note. */
 const filesOf = ({ large, small, note }: (typeof MEDIA)[SunSource]) =>
   [large.source, small.source, large.still, small.still, `${large.still}.json`, `${small.still}.json`, note];
-/** The files of the version that is not shown. config/site-metadata.ts keeps them out of the build. */
-export const UNUSED_SUN_FILES = filesOf(MEDIA[SUN_SOURCE === 'simulated' ? 'observed' : 'simulated']);
+/** The files the page does not use: the other version's, and the shown version's large size (its still
+    stays in public/, where `npm run assets` makes the icons from it). config/site-metadata.ts keeps them
+    out of the build. */
+export const UNUSED_SUN_FILES = [
+  ...filesOf(MEDIA[SUN_SOURCE === 'simulated' ? 'observed' : 'simulated']),
+  SUN_VARIANTS.large.source, SUN_VARIANTS.large.still, `${SUN_VARIANTS.large.still}.json`,
+];
 
 // The public note on how the Sun was made, or where it came from and how it may be used.
 export const SOURCE_NOTE = MEDIA[SUN_SOURCE].note;
 // The NASA record of the observation: the footage itself, or what the simulation is modeled on.
 export const NASA_RECORD = 'https://svs.gsfc.nasa.gov/11379/';
 
-// Where the Sun sits in its pictures, as shares of half a picture's width. The Sun is sized and
-// placed by its disc wherever it goes (hooks/useSunDock.ts): in the hero its picture is shown a
-// little smaller than its square, in the closing box at the square's full size, so their frames
-// would not agree.
-/** Every video and still, of either version: the disc's edge is 812 px from the center of the
-    2048 px frame (scripts/sun_media.py), and all but the faintest of its fringe has gone by 96%. */
+/** Where the Sun sits in its pictures, as shares of half a picture's width: the disc's edge is 812 px
+    from the center of the 2048 px frame (scripts/sun_media.py), and all but the faintest of its fringe
+    has gone by 96%. styles/sun.css sizes the picture from the disc by the first figure. */
 export const SUN_FRAMING = { disc: 812 / 1024, fringe: 0.96 } as const;
-
-// The Sun's square is never wider than 640 CSS px (styles/hero.css), which the 1280-pixel files
-// fill pixel for pixel on a 2x screen. The 2048-pixel files, about 4.8 MB more video, are kept for
-// where those would fall visibly short: a screen denser than 2.25x, in a window large enough to
-// show the Sun near its full size. Everywhere else the Sun is smaller than its pixels, or within a
-// tenth of them (hooks/useSunDock.ts never enlarges the footage: short of pixels, it shows the Sun
-// that much smaller).
-export const LARGE_SUN_QUERY = '(min-width: 1281px) and (min-height: 880px) and (-webkit-min-device-pixel-ratio: 2.25)';
-
-let chosen: (typeof SUN_VARIANTS)['large' | 'small'] | undefined;
-
-/** The files for this page view. Chosen once: resizing, rotating, and docking never swap them. */
-export function sunVariant() {
-  chosen ??= matchMedia(LARGE_SUN_QUERY).matches ? SUN_VARIANTS.large : SUN_VARIANTS.small;
-  return chosen;
-}

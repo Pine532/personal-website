@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { MediaStatus } from '../components/SolarScene';
 
 // Chrome's Data Saver, or a connection the browser itself classes as 2G: keep the still until asked.
 export const LESS_DATA = prefersLessData();
+
+/** What the footage is doing, as components/CornerSun.tsx reports it. */
+export type MediaStatus = 'still' | 'loading' | 'playing' | 'paused' | 'blocked' | 'error';
 
 function prefersLessData() {
   const { connection } = navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } };
@@ -10,7 +12,8 @@ function prefersLessData() {
 }
 
 export type SunMotion = {
-  /** What the visitor has asked for. SolarScene reports what actually happened through onStatus. */
+  /** What the visitor has asked for: whether the footage plays. CornerSun reports what actually
+      happened through onStatus. */
   playing: boolean;
   /** Whether motion has been on at all in this visit. A visitor who prefers reduced motion or is
       saving data, and has never pressed Play, is not offered the control a second time. */
@@ -21,14 +24,20 @@ export type SunMotion = {
   /** What pressing a motion control will do, which is also what it is called. */
   label: string;
   toggle: () => void;
+  /** Sets the switch outright (the terminal's `sun pause`, `sun play` and `sun`). */
+  set: (command: 'play' | 'pause' | 'toggle') => void;
   onStatus: (status: MediaStatus) => void;
 };
 
 /**
- * The visitor's say over the Sun's motion. It is one switch with two handles: the control in the
- * hero, and one in the header for as long as the footage plays away from the hero, in the corner
- * and on its way down (components/SiteHeader.tsx), so that it can be stopped from wherever it is
- * seen moving. The closing box's own Sun follows the same switch (components/ClosingSun.tsx).
+ * The visitor's say over the Sun's motion, which is its footage: the simulated Sun turns about its
+ * axis once in each loop, the observed Sun moves as the real one did, and the still, the loop's
+ * first frame, does not move. It is one switch with two handles: the control under the Sun in the
+ * corner (components/CornerSun.tsx), and the terminal's `sun` command (src/terminal/commands.ts).
+ *
+ * A visitor who prefers reduced motion, or is saving data, has the still until Play is pressed.
+ * Footage that fails, or that the browser will not start by itself, turns the switch off: what is on
+ * show stays, and the control offers Play (or Retry) to ask for the footage again.
  */
 export function useSunMotion(reduced: boolean): SunMotion {
   const [playing, setPlaying] = useState(!reduced && !LESS_DATA);
@@ -55,6 +64,11 @@ export function useSunMotion(reduced: boolean): SunMotion {
     if (failed) setRetry(value => value + 1);
     setPlaying(value => !value);
   }, [failed]);
+  const set = useCallback((command: 'play' | 'pause' | 'toggle') => {
+    if (command === 'toggle') return toggle();
+    if (command === 'play' && failed) setRetry(value => value + 1);
+    setPlaying(command === 'play');
+  }, [failed, toggle]);
 
-  return { playing, asked, status, retry, label: failed ? 'Retry motion' : playing ? 'Pause motion' : 'Play motion', toggle, onStatus };
+  return { playing, asked, status, retry, label: failed ? 'Retry motion' : playing ? 'Pause motion' : 'Play motion', toggle, set, onStatus };
 }
