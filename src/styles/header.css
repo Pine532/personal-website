@@ -1,0 +1,30 @@
+/* The fixed header (components/SiteHeader.tsx): the name, a line about Owen, and the navigation
+   in the first three columns of the grid; the fourth is the Sun's (styles/sun.css). At the top of
+   the page it is type alone over the opening. Once the page has scrolled (data-scrolled, written by
+   hooks/usePageState.ts) it draws in: the line about Owen goes, and the name and the links stand in
+   dark pills, in a row, so whatever scrolls beneath them never shows through, over the light About
+   section included. It ignores the pointer except on its own links, so the page beneath stays
+   clickable. */
+.site-header { position: fixed; inset: 0 0 auto; z-index: 30; padding-top: 24px; align-items: start; pointer-events: none; }
+.site-header a, .site-header p { pointer-events: auto; }
+.site-name { display: inline-flex; justify-self: start; align-items: center; min-height: 28px; padding: 0; text-decoration: none; transition: padding 200ms ease, background-color 200ms ease; }
+.site-name:hover { text-decoration: underline; }
+.site-tagline { margin: 0; padding-block: 5px; transition: opacity 200ms ease; }
+.site-navigation { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.site-navigation a { display: inline-flex; align-items: center; min-height: 24px; text-decoration: none; transition: padding 200ms ease, background-color 200ms ease; }
+.site-navigation a:hover, .site-navigation a[aria-current='true'] { text-decoration: underline; }
+.site[data-scrolled='true'] .site-tagline { opacity: 0; visibility: hidden; transition: opacity 200ms ease, visibility 0s 200ms; }
+.site[data-scrolled='true'] .site-navigation { flex-direction: row; flex-wrap: wrap; gap: 4px; }
+.site[data-scrolled='true'] :is(.site-name, .site-navigation a) { min-height: 28px; padding-inline: 10px; background: #15150f; }
+
+@media (max-width: 760px) {
+  .site-header { padding-top: 16px; }
+  .site-tagline { display: none; }
+  /* The navigation keeps clear of the Sun at the window's right; drawn in, it takes a row of its own
+     under the name, where its pills have room to stand in a line. */
+  .site-navigation { grid-column: 2; margin-right: calc(var(--corner-disc) + var(--corner-fringe) + 8px); }
+  .site[data-scrolled='true'] .site-navigation { grid-column: 1 / 3; grid-row: 2; margin-top: 6px; }
+}
+@media (forced-colors: active) {
+  .site[data-scrolled='true'] :is(.site-name, .site-navigation a) { border: 1px solid CanvasText; }
+}
