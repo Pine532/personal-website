@@ -1,6 +1,6 @@
-// The page's scroll position, for everything that follows it: the Sun's journeys, the place of the
-// closing box's own Sun, the lit edges of the letters and the controls, the project stages, and the
-// navigation's current section. One passive
+// The page's scroll position, for everything that follows it: the page's state for the header and
+// the Sun (hooks/usePageState.ts), the index of work, the project stages, and the navigation's
+// current section. One passive
 // listener and one frame for all of them, and one reading of the position. It is read as the scroll
 // event arrives, before anything is written in that frame, so the read never makes the browser lay
 // the page out a second time. (While a CSS transition is running, the header's name fading in for
