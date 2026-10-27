@@ -1,0 +1,65 @@
+/* The terminal (components/Terminal.tsx): a panel with a title bar, a scrolling screen, and the
+   buttons that run commands where there is no keyboard. Its type is the mono at reading size; the
+   tones (t-*) are the shell's: the prompt in gold, directories in blue, errors in red. */
+.terminal { display: flex; flex-direction: column; height: clamp(380px, 42svh, 560px); margin-inline: var(--gutter); border: 1px solid var(--line); background: #070706; color: #cfcdc4; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; container-type: inline-size; }
+.terminal-bar { display: flex; flex: none; justify-content: space-between; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.terminal-screen { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 16px 14px; cursor: text; overscroll-behavior: contain; scrollbar-color: #35372f #070706; }
+.terminal-log { white-space: pre-wrap; overflow-wrap: anywhere; }
+.terminal-entry { margin-bottom: 2px; }
+.terminal-lines { display: block; }
+.t-prompt { color: var(--amber); }
+.t-cmd { color: var(--text); }
+.t-muted { color: var(--muted); }
+.t-dir { color: #8fb8ff; }
+.t-error { color: #ff8a7a; }
+.t-accent { color: var(--amber); }
+.t-heading { color: var(--text); font-weight: 600; }
+/* ls: names across the line; with -l, a row each, with what the thing is beside it. */
+.terminal-listing { display: flex; flex-wrap: wrap; gap: 0 24px; margin: 0; padding: 0; list-style: none; white-space: normal; }
+.terminal-listing[data-long='true'] { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 24px; }
+.terminal-listing[data-long='true'] li { display: contents; }
+/* The name in block letters (whoami): as wide as the screen allows, the initials where the whole name
+   would be too small to read. The width is 96 characters at six tenths of the font size each. */
+.terminal-banner { display: block; margin: 6px 0 10px; font: inherit; font-size: min(13px, calc((100cqw - 34px) / 58)); line-height: 1.06; letter-spacing: 0; white-space: pre; color: var(--text); overflow: hidden; }
+.terminal-banner-narrow { display: none; }
+@container (width < 560px) {
+  .terminal-banner { font-size: min(13px, calc((100cqw - 34px) / 13)); }
+  .terminal-banner-wide { display: none; }
+  .terminal-banner-narrow { display: inline; }
+  /* ls -l in a narrow terminal: the description on a line of its own, under the name. */
+  .terminal-listing[data-long='true'] { grid-template-columns: minmax(0, 1fr); }
+  .terminal-listing[data-long='true'] li > span:last-child:not(:first-child) { padding-left: 2ch; margin-bottom: 4px; }
+}
+/* The line being typed: a real input, invisible, over a mirror of its text that carries the block
+   caret. The mirror lays out the line, so the two wrap alike. */
+.terminal-line { display: flex; gap: 0 1ch; align-items: baseline; }
+.terminal-line > .t-prompt { flex: none; }
+.terminal-input-wrap { position: relative; flex: 1; min-width: 1ch; }
+.terminal-mirror { display: block; min-height: 1lh; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text); }
+.terminal-caret { display: inline-block; min-width: .6em; box-shadow: inset 0 0 0 1px var(--text); }
+.terminal-screen:focus-within .terminal-caret { background: var(--text); color: var(--field); box-shadow: none; animation: terminal-blink 1.1s steps(1) infinite; }
+@keyframes terminal-blink { 50% { background: transparent; color: var(--text); box-shadow: inset 0 0 0 1px var(--text); } }
+.terminal-input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; background: none; color: transparent; caret-color: transparent; font: inherit; letter-spacing: inherit; outline: none; }
+.terminal-input::selection { background: rgb(242 207 99 / .35); }
+/* The buttons: the commands worth a press where there is no keyboard, and a shortcut where there is. */
+.terminal-chips { display: flex; flex: none; flex-wrap: wrap; gap: 8px; padding: 10px 16px 12px; border-top: 1px solid var(--line); }
+.terminal-chip { min-height: 32px; padding: 4px 10px; border: 1px solid var(--line); background: none; color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; transition: color 160ms ease, border-color 160ms ease; }
+.terminal-chip:hover { color: var(--text); border-color: #4b4d44; }
+.terminal-chip:focus-visible { outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  .terminal { height: 58svh; font-size: 12.5px; }
+  .terminal-hint { display: none; }
+  .terminal-screen { padding: 14px 12px; }
+  .terminal-bar, .terminal-chips { padding-inline: 12px; }
+}
+@media (max-height: 599px) {
+  .terminal { height: 420px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .terminal-screen:focus-within .terminal-caret { animation: none; }
+}
+@media (forced-colors: active) {
+  .terminal-caret { box-shadow: inset 0 0 0 1px CanvasText; }
+  .terminal-screen:focus-within .terminal-caret { background: CanvasText; color: Canvas; }
+}
