@@ -1,40 +1,55 @@
-/* Selected work: text-led project rows with native case-note disclosures. */
-.work-section { position: relative; background: var(--surface); padding-top: clamp(80px, 8vw, 128px); padding-bottom: 40px; }
-/* A warm line continues the instrument material at the section's entrance. */
-.work-section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, var(--line), #726130 65%, var(--line)); }
-.section-heading { max-width: var(--content-width); margin: 0 auto 78px; display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; }
-.section-heading > p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.7; max-width: 330px; text-wrap: balance; }
+/* Selected work: the index of projects set very large, then each project's case with its moving
+   visual on a stage that pins while scrolling tells its story. */
+.work-section { position: relative; padding-top: clamp(96px, 10vw, 160px); padding-bottom: clamp(48px, 6vw, 96px); background: var(--field); }
+.section-head { align-items: start; margin-bottom: clamp(48px, 6vw, 96px); }
+.section-head h2 { grid-column: 1 / 2; margin: 0; font-weight: 400; }
+.section-head p { grid-column: 3 / 5; margin: 0; max-width: 56ch; }
 
-.projects { max-width: var(--content-width); margin-inline: auto; }
-.project { padding-bottom: 64px; }
-.project + .project { padding-top: 64px; border-top: 1px solid var(--line); }
-.project-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 36px; margin-bottom: 36px; }
-.project h3 { max-width: 770px; margin: 0; font-size: clamp(28px, 3vw, 44px); font-weight: 400; letter-spacing: -0.025em; line-height: 1.18; overflow-wrap: break-word; }
-.project--featured h3 { max-width: 650px; font-size: clamp(36px, 3.9vw, 56px); }
-.project-organization { margin: 21px 0 5px; font-size: 15px; color: var(--text); }
-.project-role, .project-date { font-size: 13px; color: var(--muted); line-height: 1.7; margin: 0; }
-.project-date { text-align: right; flex-shrink: 0; padding-top: 7px; white-space: nowrap; }
-.project-date > span { display: block; }
+/* The index (components/WorkIndex.tsx): a row per project in the first three columns, the preview in
+   the fourth, where it stays put as the rows go by. A row is dim until it is the current one. */
+.index { align-items: start; margin-bottom: clamp(96px, 12vw, 200px); }
+.index-rows { grid-column: 1 / 4; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.index-row { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: var(--gutter); align-items: baseline; padding: 14px 0 18px; border-bottom: 1px solid var(--line); color: var(--dim); text-decoration: none; transition: color 260ms ease; }
+.index-row[data-active='true'], .index-row:hover, .index-row:focus-visible { color: var(--text); }
+.index-row:focus-visible { outline-offset: -2px; }
+.index-number { align-self: start; padding-top: 10px; }
+.index-name { font-size: clamp(40px, 7vw, 104px); font-weight: 500; letter-spacing: -.035em; line-height: .95; overflow-wrap: anywhere; }
+.index-title { grid-column: 2; margin-top: 10px; }
+.index-preview { grid-column: 4 / 5; position: sticky; top: calc(var(--header-height) + 24px); }
+.index-preview-screen { padding: 14px 16px; border: 1px solid var(--line); background: #070706; color: #cfcdc4; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; animation: preview-in 220ms ease; }
+@keyframes preview-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .index-preview-screen { animation: none; } }
+@media screen and (min-width: 1100px) and (min-height: 600px) {
+  .index-preview { top: calc(var(--corner-top) + var(--corner-disc) + 80px); }
+}
 
-.figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px clamp(24px, 4vw, 64px); margin: 0 0 44px; padding: 28px 0 0; border-top: 1px solid var(--line); list-style: none; }
-/* Each figure reads in the order it is shown: the value, what it measures, then its context. */
-.figure { display: flex; flex-direction: column; min-width: 0; }
-.figure-value { font-size: clamp(24px, 2.3vw, 34px); line-height: 1.1; letter-spacing: -0.035em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.figure-label { margin-top: 10px; font-size: 14px; line-height: 1.45; overflow-wrap: break-word; }
-.figure-detail { color: var(--muted); font-size: 12px; line-height: 1.6; overflow-wrap: break-word; }
-
-.project-body { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: clamp(40px, 7vw, 112px); align-items: start; }
-.project-summary { font-size: clamp(18px, 1.65vw, 24px); line-height: 1.55; color: #dedbd1; margin: 0; max-width: 42ch; }
-.project-tools { margin-top: 27px; color: var(--muted); font-size: 12px; line-height: 1.8; }
-.project-link { display: flex; align-items: center; gap: 8px; width: fit-content; min-height: 44px; margin-top: 16px; font-size: 13px; text-decoration: none; }
+/* A project's case. The heading row is on the grid; the stage, the facts and the notes keep the gutter. */
+.project { padding-top: clamp(48px, 6vw, 96px); padding-bottom: clamp(56px, 8vw, 120px); border-top: 1px solid var(--line); }
+.project-heading { align-items: start; row-gap: 32px; margin-bottom: 44px; }
+.project-title-block { grid-column: 1 / 3; }
+.project-index { margin: 0 0 22px; }
+.project h3 { margin: 0; font-size: clamp(30px, 3.8vw, 60px); font-weight: 500; letter-spacing: -.03em; line-height: 1.02; overflow-wrap: break-word; }
+.project-meta { grid-column: 3 / 5; }
+.project-meta > p { margin: 0; }
+.project-organization { color: var(--text); }
+.project-summary { margin-top: 22px !important; max-width: 46ch; font-size: clamp(17px, 1.35vw, 20px); line-height: 1.55; color: #d9d7cf; }
+.project-tools { margin-top: 20px; }
+.project-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 8px; text-decoration: none; }
 .project-link:hover { text-decoration: underline; }
-.project-link:focus-visible, .case-permalink:focus-visible { outline-offset: 3px; }
-.project-link svg { width: 11px; height: 11px; flex-basis: 11px; stroke-width: 1.2; }
-.project-facts { margin: 0; }
-.project-facts > div { display: grid; grid-template-columns: 94px 1fr; gap: 14px; margin-bottom: 20px; }
-.project-facts > div:last-child { margin-bottom: 0; }
-.project-facts dt { font-size: 12px; padding-top: 3px; color: var(--muted); }
-.project-facts dd { margin: 0; font-size: 15px; line-height: 1.75; color: var(--reading); max-width: 72ch; }
+.project-link svg { width: 11px; height: 11px; flex-basis: 11px; }
+
+/* Headline figures: four across, above the visual. */
+.figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px var(--gutter); margin: 0 0 var(--visual-gap); padding: 20px 0 0; border-top: 1px solid var(--line); list-style: none; }
+.figure { display: flex; flex-direction: column; min-width: 0; }
+.figure-value { font-size: clamp(30px, 3vw, 48px); font-weight: 500; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.figure-label { margin-top: 10px; overflow-wrap: break-word; }
+.figure-detail { margin-top: 4px; font-family: var(--mono); font-size: 11.5px; line-height: 1.55; color: var(--muted); overflow-wrap: break-word; }
+
+/* The facts: a row each, the label in the first column. */
+.project-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: var(--gutter); margin: 0 var(--gutter); border-top: 1px solid var(--line); }
+.project-facts > div { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.project-facts dt { grid-column: 1; padding-top: 3px; }
+.project-facts dd { grid-column: 2 / 5; margin: 0; max-width: 72ch; font-size: 15px; line-height: 1.75; color: #c8c5ba; }
 
 /* The stage a project's visual stands on (components/ProjectStage.tsx). Where it pins, the stage is a
    track taller than the visual by two scroll distances, and the visual is sticky in it: it comes to rest
@@ -58,7 +73,7 @@
    stage. The room is an element's height, not the track's padding: a sticky box cannot travel into its
    parent's padding. */
 /* The space under a visual. It is the stage's to say, since the hold is worked out from it. */
-.project-stage { --visual-gap: 36px; }
+.project-stage { --visual-gap: 40px; margin-inline: var(--gutter); }
 /* Never seen: as tall as the window at its smallest, which is what a block is rested by below. The
    stages measure it to know that height (and that the browser knows the unit at all). */
 .stage-probe { position: absolute; top: 0; left: 0; width: 0; height: 100svh; visibility: hidden; pointer-events: none; }
@@ -80,10 +95,9 @@
   .project-stage[data-pinned='on'][data-lead='out'] > .project-stage-pin { display: contents; }
   /* A figure pinned with the visual waits for the moment of the story it answers, and comes up to its
      own tones there; it goes back down if the story does. It is the value that waits, in the tone the
-     art gives a part not yet reached (5.3:1 on the surface), and what it measures a step quieter than
-     it will be; the line of context under them stays as it is. So a waiting figure can still be read,
-     and its three lines keep their order. A visitor who has asked for more contrast gets every figure
-     at its own tones throughout, as in forced colors. */
+     art gives a part not yet reached, and what it measures a step quieter than it will be; the line of
+     context under them stays as it is. A visitor who has asked for more contrast gets every figure at
+     its own tones throughout, as in forced colors. */
   .figure[data-beat] > span { transition: color 320ms ease; }
   @media (prefers-contrast: no-preference) {
     .figure[data-tone='dim'] > .figure-value { color: #8a887f; }
@@ -108,7 +122,7 @@
    The box carries its own field, so in forced colors the art keeps its colors, as an image would.
    Its moving labels are never used as scroll anchors, so the art cannot move the page. */
 .project-visual { margin: 0 0 var(--visual-gap); container-type: inline-size; }
-.project-visual-art { position: relative; height: 272px; background: var(--surface); overflow-anchor: none; }
+.project-visual-art { position: relative; height: 272px; border: 1px solid var(--line); background: var(--surface); overflow-anchor: none; }
 @container (min-width: 640px) { .project-visual-art { height: 304px; } }
 @container (min-width: 960px) { .project-visual-art { height: 288px; } }
 .project-visual-host { position: absolute; inset: 0; }
@@ -118,85 +132,74 @@
    scene is rebuilt when they change (components/visuals/VisualFrame.tsx). Held at the right, so enlarged
    text grows it leftward, where it cannot widen the page. */
 .project-visual-probe { position: absolute; top: 0; right: 0; visibility: hidden; white-space: nowrap; pointer-events: none; font: 400 12px 'Manrope Variable', sans-serif; }
-.project-visual-caption { display: flex; justify-content: space-between; align-items: center; gap: 24px; min-height: 32px; margin-top: 10px; font-size: 12px; line-height: 1.45; color: var(--muted); }
-.project-visual-caption > span { max-width: 72ch; text-wrap: balance; }
+.project-visual-caption { display: flex; justify-content: space-between; align-items: center; gap: 24px; min-height: 32px; margin-top: 12px; font-family: var(--mono); font-size: 11.5px; line-height: 1.55; color: var(--muted); }
+.project-visual-caption > span { max-width: 80ch; text-wrap: balance; }
 /* In a narrow column the toggle takes a line of its own, at the right, and the caption the full width. */
 @container (width < 480px) {
   .project-visual-caption { flex-wrap: wrap; row-gap: 8px; }
   .project-visual-caption > span { flex-basis: 100%; }
   .visual-toggle { margin-left: auto; }
 }
-/* A compact version of the secondary graphite control: a 1 px edge and a warm reflection that brightens
-   on hover. Its touch area is 44 px tall, and it keeps one width for Pause and Play, so nothing moves
-   when it is pressed. The reflection sits under the glyph and the word. */
-.visual-toggle { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 6.25em; min-height: 30px; padding: 3px 11px 3px 10px; border: 1px solid var(--line); border-radius: 3px; background: linear-gradient(165deg, #1a1b18, #0d0e0c); color: #d2d0c8; font: 450 12px/1.25 'Manrope Variable', sans-serif; cursor: pointer; transition: transform 160ms var(--ease-out), border-color 180ms ease, color 180ms ease; }
+/* The pause control: a small bordered button in the mono. It keeps one width for Pause and Play, so
+   nothing moves when it is pressed; its touch area is 44 px tall. */
+.visual-toggle { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 6.5em; min-height: 30px; padding: 3px 11px 3px 10px; border: 1px solid var(--line); background: none; color: #d2d0c8; font: 400 11.5px/1.25 var(--mono); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: border-color 160ms ease, color 160ms ease; }
 .visual-toggle::before { content: ''; position: absolute; inset: -8px -4px; }
-.visual-toggle::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0.06; background: radial-gradient(ellipse at 100% 80%, #f5d87a 0%, transparent 67%); transition: opacity 180ms ease; }
-.visual-toggle > svg, .visual-toggle > span { position: relative; z-index: 1; }
-/* Its lit edges (styles/controls.css) lie over its border. */
-.visual-toggle > .lit-edge { position: absolute; inset: -1px; z-index: 0; }
 .visual-toggle svg { width: 10px; height: 10px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-.visual-toggle:active { transform: scale(0.975); transition-duration: 80ms; }
-.visual-toggle:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+.visual-toggle:hover { border-color: #4b4d44; color: var(--text); }
+.visual-toggle:focus-visible { outline-offset: 3px; }
 
-.case-details { margin-top: 30px; }
-.case-details summary { min-height: 48px; width: fit-content; display: flex; align-items: center; gap: 48px; cursor: pointer; font-size: 14px; color: var(--text); list-style: none; padding: 6px 0; }
+.case-details { margin: 32px var(--gutter) 0; }
+.case-details summary { display: flex; align-items: center; gap: 40px; width: fit-content; min-height: 48px; padding: 6px 0; cursor: pointer; color: var(--text); list-style: none; }
 .case-details summary::-webkit-details-marker { display: none; }
-.disclosure-icon { width: 20px; height: 20px; stroke: var(--amber); stroke-width: 1.25; }
+.disclosure-icon { width: 18px; height: 18px; stroke: var(--amber); stroke-width: 1.25; }
 .case-details[open] .disclosure-vertical { display: none; }
 .case-content { margin-top: 18px; padding: 28px 0 0; border-top: 1px solid var(--line); }
-.case-blocks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 72px; }
-.case-blocks h4 { margin: 0 0 13px; font-size: 17px; font-weight: 500; }
-.case-blocks p { margin: 0 0 15px; font-size: 14px; color: var(--reading); line-height: 1.85; max-width: 72ch; }
-.comparison { margin-bottom: 40px; max-width: 760px; }
+.case-blocks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px var(--gutter); }
+.case-blocks h4 { margin: 0 0 13px; font-size: 17px; font-weight: 500; letter-spacing: -.01em; }
+.case-blocks p { margin: 0 0 15px; max-width: 72ch; font-size: 15px; line-height: 1.8; color: #c8c5ba; }
+.comparison { max-width: 760px; margin-bottom: 40px; }
 .comparison table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; font-variant-numeric: tabular-nums; }
-.comparison caption { text-align: left; font-size: 16px; margin-bottom: 16px; }
+.comparison caption { margin-bottom: 16px; text-align: left; font-size: 16px; }
 .comparison th, .comparison td { padding: 12px 14px 12px 0; border-bottom: 1px solid var(--line); line-height: 1.6; overflow-wrap: anywhere; }
-.comparison thead th { font-size: 12px; color: var(--muted); font-weight: 400; }
+.comparison thead th { font-family: var(--mono); font-size: 11.5px; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .comparison tbody th { font-weight: 400; }
-.case-links { margin: 28px 0 0; color: var(--muted); font-size: 12px; }
+.case-links { margin: 28px 0 0; }
 .case-permalink { display: inline-block; padding: 12px 0; }
 
 @media (hover: hover) and (pointer: fine) {
   .case-details summary:hover > span { text-decoration: underline; }
-  .visual-toggle:hover { border-color: #4b4d44; color: var(--text); }
-  .visual-toggle:hover::after { opacity: 0.14; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .visual-toggle:active { transform: none; }
 }
 @media (forced-colors: active) {
   .disclosure-icon { stroke: currentColor; }
   .visual-toggle { border-color: ButtonText; }
   .project-visual-art { forced-color-adjust: none; }
 }
-@media (max-width: 1000px) and (min-width: 701px) {
-  .project-heading { gap: 24px; }
+@media (max-width: 1000px) and (min-width: 761px) {
   .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .project-body { gap: 36px; }
-  .project-facts > div { grid-template-columns: 1fr; gap: 6px; }
+  .project-facts dd { grid-column: 2 / 5; }
 }
-@media (max-width: 700px) {
-  .section-heading { display: block; margin-bottom: 48px; }
-  .section-heading > p { margin-top: 23px; font-size: 14px; }
-  .project { padding-bottom: 42px; }
-  .project + .project { padding-top: 42px; }
-  .project-heading { display: block; margin-bottom: 26px; }
-  .project-organization { font-size: 14px; }
-  .project-role { font-size: 12px; }
-  /* Date and place share a line here, and must stay free to wrap when text is enlarged. */
-  .project-date { text-align: left; padding-top: 13px; font-size: 12px; white-space: normal; }
-  .project-date > span { display: inline; margin-left: 10px; }
-  .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 20px; margin-bottom: 32px; padding-top: 24px; }
-  .figure-label { font-size: 13px; }
-  .project-body { grid-template-columns: 1fr; gap: 30px; }
-  .project-summary { font-size: 19px; }
-  .project-facts > div { display: block; margin-bottom: 20px; }
-  .project-facts dt { margin-bottom: 6px; }
+@media (max-width: 760px) {
+  .section-head { row-gap: 20px; }
+  .section-head h2, .section-head p { grid-column: 1 / 3; }
+  .index { margin-bottom: 72px; }
+  .index-rows { grid-column: 1 / 3; }
+  .index-row { grid-template-columns: 32px minmax(0, 1fr); padding: 12px 0 14px; }
+  .index-number { padding-top: 6px; }
+  .index-name { font-size: clamp(34px, 11vw, 52px); }
+  .index-title { margin-top: 8px; }
+  .index-preview { display: none; }
+  .project { padding-top: 40px; padding-bottom: 56px; }
+  .project-heading { row-gap: 24px; margin-bottom: 30px; }
+  .project-title-block, .project-meta { grid-column: 1 / 3; }
+  .project-index { margin-bottom: 14px; }
+  .project-summary { font-size: 17px; }
+  .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .project-facts { grid-template-columns: 1fr; }
+  .project-facts > div { grid-template-columns: 1fr; row-gap: 8px; }
+  .project-facts dt, .project-facts dd { grid-column: 1; }
   .project-facts dd, .case-blocks p { font-size: 16px; }
   .case-details { margin-top: 18px; }
   .case-blocks { grid-template-columns: 1fr; gap: 18px; }
   .comparison table { font-size: 13px; }
-  .comparison thead th { font-size: 12px; }
   .comparison th:first-child { width: 30%; }
 }

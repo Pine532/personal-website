@@ -7,6 +7,7 @@ import { InlineList } from './InlineList';
 import { ProjectStage } from './ProjectStage';
 import { ProjectVisual } from './ProjectVisual';
 import { scenes, stories } from './visuals/scenes';
+import { WorkIndex } from './WorkIndex';
 
 /**
  * Headline numbers, in reading order: the value, what it measures, then its context.
@@ -21,7 +22,7 @@ function Figures({ figures }: { figures: Figure[] }) {
       {figures.map(figure => (
         <li className="figure" key={figure.label} data-beat={figure.beat} data-tone={figure.beat ? 'full' : undefined}>
           <span className="figure-value">{figure.value}</span>{' '}
-          <span className="figure-label">{figure.label}</span>
+          <span className="figure-label label">{figure.label}</span>
           {figure.detail && <>{' '}<span className="figure-detail">{figure.detail}</span></>}
         </li>
       ))}
@@ -55,7 +56,7 @@ function CaseNotes({ project }: { project: CaseStudy }) {
   if (project.details.length === 0 && !project.comparison) return null;
   return (
     <details id={`case-${project.id}`} className="case-details">
-      <summary>
+      <summary className="label">
         <span>Case notes<span className="sr-only">: {project.organization}</span></span>
         <svg className="disclosure-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <path d="M4 10h12" />
@@ -72,7 +73,7 @@ function CaseNotes({ project }: { project: CaseStudy }) {
             </section>
           ))}
         </div>
-        <p className="case-links">
+        <p className="case-links label muted">
           <a href={`#case-${project.id}`} className="case-permalink">
             Link to these notes<span className="sr-only">: {project.organization}</span>
           </a>
@@ -84,8 +85,7 @@ function CaseNotes({ project }: { project: CaseStudy }) {
 
 /**
  * The project's figures, then its moving visual, when it has one, on its stage: after the heading,
- * before the body. The figures stand on the stage with the visual, which draws what they claim: left
- * above it they would be sliding out under the header while its story was told.
+ * before the facts. The figures stand on the stage with the visual, which draws what they claim.
  */
 function Showing({ project }: { project: CaseStudy }) {
   const figures = <Figures figures={project.figures} />;
@@ -99,40 +99,39 @@ function Showing({ project }: { project: CaseStudy }) {
   );
 }
 
-function Project({ project, featured }: { project: CaseStudy; featured: boolean }) {
+function Project({ project, index }: { project: CaseStudy; index: number }) {
   return (
-    <article id={project.id} className={featured ? 'project project--featured' : 'project'} aria-labelledby={`title-${project.id}`}>
-      <div className="project-heading">
-        <div>
+    <article id={project.id} className="project" aria-labelledby={`title-${project.id}`}>
+      <div className="project-heading grid">
+        <div className="project-title-block">
+          <p className="project-index label muted">{String(index + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')}</p>
           <h3 id={`title-${project.id}`}>{project.title}</h3>
-          <p className="project-organization" translate="no">{project.organization}</p>
-          <p className="project-role">{project.role}</p>
         </div>
-        <p className="project-date">
-          {project.dates}
-          {project.location && <> <span>{project.location}</span></>}
-        </p>
-      </div>
-      <Showing project={project} />
-      <div className="project-body">
-        <div>
+        <div className="project-meta">
+          <p className="project-organization label" translate="no">{project.organization}</p>
+          <p className="project-role label muted">{project.role}</p>
+          <p className="project-date label muted">
+            {project.dates}
+            {project.location && <> · <span>{project.location}</span></>}
+          </p>
           <p className="project-summary">{project.summary}</p>
-          {project.tools.length > 0 && <InlineList items={project.tools} className="project-tools" label="Tools" />}
+          {project.tools.length > 0 && <InlineList items={project.tools} className="project-tools label muted" label="Tools" />}
           {project.links.map(link => (
-            <a className="project-link" key={link.href} href={link.href} target="_blank" rel="noreferrer">
+            <a className="project-link label" key={link.href} href={link.href} target="_blank" rel="noreferrer">
               {link.label} <Arrow /><span className="sr-only"> (opens in a new tab)</span>
             </a>
           ))}
         </div>
-        <dl className="project-facts">
-          {project.facts.map(fact => (
-            <div key={fact.label}>
-              <dt>{fact.label}</dt>
-              <dd>{fact.text}</dd>
-            </div>
-          ))}
-        </dl>
       </div>
+      <Showing project={project} />
+      <dl className="project-facts">
+        {project.facts.map(fact => (
+          <div key={fact.label}>
+            <dt className="label muted">{fact.label}</dt>
+            <dd>{fact.text}</dd>
+          </div>
+        ))}
+      </dl>
       <CaseNotes project={project} />
     </article>
   );
@@ -143,15 +142,16 @@ export function Work() {
   const probe = useRef<HTMLSpanElement>(null);
   usePinnedStages(probe);
   return (
-    <section id="work" className="work-section section-shell" aria-labelledby="work-heading">
+    <section id="work" className="work-section" aria-labelledby="work-heading">
       {/* Never seen: as tall as the window at its smallest (styles/work.css), for the stages to measure. */}
       <span ref={probe} className="stage-probe" aria-hidden="true" />
-      <div className="section-heading">
-        <h2 id="work-heading" tabIndex={-1}>Selected work</h2>
-        <p>{workIntroduction}</p>
+      <div className="section-head grid">
+        <h2 id="work-heading" className="label" tabIndex={-1}>Selected work</h2>
+        <p className="label">{workIntroduction}</p>
       </div>
+      <WorkIndex />
       <div className="projects">
-        {projects.map((project, index) => <Project key={project.id} project={project} featured={index === 0} />)}
+        {projects.map((project, index) => <Project key={project.id} project={project} index={index} />)}
       </div>
     </section>
   );
