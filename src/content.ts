@@ -19,6 +19,8 @@ type ExternalLink = { label: string; href: string };
 export type CaseStudy = {
   id: string;
   title: string;
+  /** The project's name in the index of work (components/WorkIndex.tsx), set very large: the organization, or the subject where the organization would overclaim. */
+  short: string;
   organization: string;
   role: string;
   dates: string;
@@ -47,12 +49,12 @@ type Credential = { name: string; issuer: string; date: string; href?: string };
 
 // What the page says about its Sun, for each of the two versions (src/media.ts explains them).
 // `credit` is the main credit link beside the scene and `more` the link under it. The simulated Sun has
-// no `credit`, only the "Modeled on NASA" line. Its `more` link says aloud that the Sun is a
+// no `credit`, only the "Rendered by me in Python" line. Its `more` link says aloud that the Sun is a
 // simulation, and the note (media.ts) stays published.
 const SUN_COPY = {
   simulated: {
     credit: null,
-    more: { label: 'Modeled on NASA SDO · AIA 304 Å', spoken: 'this Sun is a simulation; NASA’s record of the observation it is modeled on', href: NASA_RECORD },
+    more: { label: 'Rendered by me in Python · based on NASA SDO', spoken: 'this Sun is a simulation, rendered in Python; NASA’s record of the observation it is based on', href: NASA_RECORD },
     loading: 'Loading the simulation…',
     shareImage: 'a simulated image of the whole Sun, in the false color of NASA’s Solar Dynamics Observatory',
     fallback: 'The full site, with its simulated Sun, needs JavaScript.',
@@ -78,6 +80,9 @@ export const profile = {
   resumeUrl: '/owen-sun-zhang-resume.pdf' as string | null,
   // The no-break spaces keep "Boston University", "class of 2027" and "machine learning" whole when the line wraps.
   introduction: 'Computer engineering student at Boston\u00A0University, class\u00A0of\u00A02027, building across machine\u00A0learning, cloud infrastructure, and hardware.',
+  // The opening's statement, set large, and the line that stands beside it (components/Hero.tsx).
+  headline: 'Machine learning, cloud infrastructure, and hardware.',
+  descriptor: 'Computer engineering student at Boston University, class of 2027. Backtesting and calibration at FreeWheel, Kubernetes at Comcast, an LLM agent that repairs builds, and race-car circuit boards.',
   biography: [
     'I’m Owen Sun Zhang, a computer engineering student at Boston University, graduating in May 2027. My work so far spans machine-learning systems, cloud infrastructure, race-car electronics, and rocket propulsion.',
     'At FreeWheel, a Comcast company, I built the backtesting and calibration workflow for production conversion models, then took a calibrated model into live canary auctions. The summer before, at Comcast, I migrated an ad-serving platform from EC2 to Kubernetes. Now I’m developing an autonomous LLM agent that repairs failing software builds, as part of a Microsoft industry project.',
@@ -150,6 +155,7 @@ export const projects: CaseStudy[] = [
   {
     id: 'freewheel',
     title: 'From backtesting to live predictions',
+    short: 'FreeWheel',
     organization: 'FreeWheel · Revenue Science',
     role: 'Machine Learning Engineering Intern',
     dates: 'June 2026 – August 2026',
@@ -195,6 +201,7 @@ export const projects: CaseStudy[] = [
   {
     id: 'build-repair-agent',
     title: 'An agent that repairs broken builds',
+    short: 'Build-repair agent',
     organization: 'Microsoft Industry Project',
     role: 'Autonomous LLM build-repair agent · in progress',
     dates: 'September 2026 – Present',
@@ -217,6 +224,7 @@ export const projects: CaseStudy[] = [
   {
     id: 'comcast',
     title: 'Ad serving on Kubernetes',
+    short: 'Comcast',
     organization: 'Comcast',
     role: 'Site Reliability Engineering / DevOps Intern',
     dates: 'June 2025 – August 2025',
@@ -245,6 +253,7 @@ export const projects: CaseStudy[] = [
   {
     id: 'terrier-motorsport',
     title: 'Precharge-capable PCB design',
+    short: 'Terrier Motorsport',
     organization: 'Terrier Motorsport · BU Formula SAE Electric',
     role: 'PCB design and low-voltage review',
     dates: 'January 2024 – Present',
@@ -265,6 +274,7 @@ export const projects: CaseStudy[] = [
   {
     id: 'rocket-propulsion',
     title: 'Thruster design and review',
+    short: 'Rocket Propulsion',
     organization: 'Boston University Rocket Propulsion Group',
     role: 'Thruster design',
     dates: 'January 2024 – Present',

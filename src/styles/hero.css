@@ -1,250 +1,27 @@
-/* The opening.
-   section#top.opening holds .hero (the name, the introduction and the scene controls, in normal
-   flow so it grows with its content) and the Sun (.solar-scene), which is laid over the whole
-   page, since it stays for all of it. As the page scrolls, the Sun shrinks into the window's
-   upper-right corner and is held there for the rest of the page; at the page's end it comes down
-   to the closing box (styles/contact.css). hooks/useSunDock.ts decides how, and says so on .site:
+/* The opening (components/Hero.tsx): the statement in the first three columns, the line beside it in
+   the fourth, both resting on the terminal, which takes the rest of the first screen. */
+.hero { display: grid; grid-template-rows: 1fr auto; row-gap: clamp(32px, 5vh, 56px); min-height: 100svh; padding-top: calc(var(--header-height) + 16px); padding-bottom: var(--gutter); }
+.hero-top { align-items: end; align-self: end; row-gap: 28px; }
+.hero-headline { grid-column: 1 / 4; margin: 0; font-size: clamp(42px, 6.9vw, 112px); font-weight: 500; letter-spacing: -.035em; line-height: .94; text-wrap: balance; overflow-wrap: break-word; }
+.hero-descriptor { grid-column: 4 / 5; margin: 0; max-width: 36ch; }
 
-   data-sun-dock     "on": the Sun travels to the corner, passing over the header on its way.
-                     "off": it scrolls away beneath the header (reduced motion, windows where the
-                     header is not fixed), and then stands in the corner, where there is one.
-   data-sun-descent  "on": at the end of the page the Sun comes down to the closing box.
-   data-sun          Where the Sun is: "hero" (at rest or on its way up), "corner", "closing" (on
-                     its way down, and in the box), or "none" (not on screen: gone with the hero, or
-                     given way to the closing box's own Sun at the page's end).
-   data-corner       "free" once the Sun has left its corner for the page's end, whole below the
-                     header or given way; "sun" until then.
-   data-hero-name    "gone" once the hero's name has scrolled under the header; "shown" until then. */
-:root {
-  --title-size: clamp(32px, 4.8vw, 72px);
-  --title-top: 28svh;
-  --sun-top: calc(var(--header-height) + 20px);
-  --sun-size: min(44vw, 64svh, 640px);
-  --hero-bottom: 22px;
+/* On a wide window the fourth column is the Sun's, with its caption beneath it: the row is kept tall
+   enough for the line beside the statement to rest below them, in a short window too. */
+@media screen and (min-width: 1100px) and (min-height: 600px) {
+  .hero-top { min-height: calc(var(--corner-top) + var(--corner-disc) + 236px - var(--header-height) - 16px); }
 }
-/* The Sun's pictures have a black sky, and the Sun goes where the ground is not black. So each is
-   shown through --sun-sky: whole to just past the disc's edge (79% of the way out), then fading,
-   and gone by 95%. On black that keeps all of the fringe that can be seen. On the charcoal of the
-   reading sections it is too much: the fringe is pure red, so wherever it has sunk below about a
-   third of full red, what is left of the picture is darker than the ground it covers, and shows as
-   a dark ring round the Sun. All round, that is the fringe from about 84% out; at the Sun's foot,
-   where the fringe is thinnest, from 82%, and there it shows as a dark arc under the Sun, which is
-   all of the ring a phone has (only the foot of its Sun hangs below the header). So the Sun that
-   stands in the corner, which is the one the charcoal passes beneath, is shown through a tighter
-   sky: --sky-trim is how far the fade is drawn in, from 0 (as above) to 1 (down to a third at 82%,
-   and gone by 85%). It is a number so that the change can be eased as the Sun docks and as it
-   leaves; a browser that does not know @property makes it in one step. */
-@property --sky-trim { syntax: '<number>'; inherits: false; initial-value: 0; }
-.solar-plane, .closing-sun {
-  --sun-sky: radial-gradient(closest-side, #000 80%, rgb(0 0 0 / .82) calc(83% - var(--sky-trim, 0) * 2.4%), rgb(0 0 0 / .55) calc(86% - var(--sky-trim, 0) * 4.8%), rgb(0 0 0 / .3) calc(89% - var(--sky-trim, 0) * 7.2%), rgb(0 0 0 / .12) calc(92% - var(--sky-trim, 0) * 9.3%), transparent calc(95% - var(--sky-trim, 0) * 9.75%));
+@media (max-width: 1099px) and (min-width: 761px) {
+  .hero-descriptor { grid-column: 3 / 5; }
 }
-
-.hero { display: flex; flex-direction: column; min-height: 100svh; padding: var(--title-top) var(--page-inset) var(--hero-bottom); overflow: hidden; background: #000; }
-
-/* Fixed header. It ignores the pointer except on its own controls, so the hero stays clickable. */
-.site-header { position: fixed; inset: 0 0 auto; height: var(--header-height); z-index: 30; pointer-events: none; }
-.header-field { position: absolute; inset: 0; background: var(--field); border-bottom: 1px solid #35372f80; }
-/* Each label is centered in a 44px target, so the row starts 6px early: the first label, not
-   its target, then sits on the page's left edge. */
-.site-navigation { position: absolute; top: 18px; left: calc(var(--page-inset) - 6px); display: flex; gap: 30px; pointer-events: auto; }
-.site-navigation a { display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; font-size: 14px; text-decoration: none; }
-.site-navigation a:hover { text-decoration: underline; }
-.site-navigation a[aria-current='true'] { text-decoration: underline; text-decoration-color: var(--amber); text-decoration-thickness: 1px; text-underline-offset: 9px; }
-/* The header's right-hand end: the control for the Sun's motion, then the link home.
-   --corner-room is the room the link keeps at its right for the Sun, clear of its fringe. */
-.header-home { --corner-room: calc(var(--corner-disc) + var(--corner-fringe) + 12px); position: absolute; top: 18px; right: var(--page-inset); display: flex; align-items: center; }
-/* The link home: the name, beside the Sun once it stands in the corner. .wordmark-sun is the
-   disc's place there (it hangs below the header on a wide window): empty, since the Sun is the
-   hero's own, but it puts the docked Sun inside the link, and it is where hooks/useSunDock.ts reads
-   the corner from. The link is shown from the frame the Sun docks. The name fades in, but only
-   once the hero's own name is under the header, and leaves at once: the name is never on screen
-   twice. Until the link is shown it is hidden with visibility, which also keeps it out of the tab
-   order and the accessibility tree. While it holds keyboard focus it stays, with its name.
-
-   Once the Sun has left the corner for the page's end (data-corner="free") the name moves over
-   into the room that was kept for it, with the control beside it, so the header does not end on
-   a gap; it goes back as the Sun returns. Both are moved by a transform, each on a layer of its
-   own from the start: nothing is laid out or painted again for the move, and the corner's place,
-   which the hook reads, never changes. (The layers also keep the header's type the same with the
-   Sun's light on the page and without it: left in the header's own layer beside the control's
-   glyph, the browser drew its edges a shade differently one way than the other.) They move by
-   whole pixels, so the name is as sharp in the corner as beside it. From then on the link is the
-   name alone: the room it has left takes no click. */
-.wordmark { position: relative; display: flex; align-items: center; min-height: 44px; padding-right: var(--corner-room); font-size: 14px; text-decoration: none; visibility: hidden; pointer-events: none; }
-.site:is([data-sun='corner'], [data-sun='closing'], [data-corner='free']) .wordmark, .wordmark:focus-visible { visibility: visible; pointer-events: auto; }
-.wordmark-name { opacity: 0; will-change: transform; transition: transform 300ms var(--ease-out); }
-.site:is([data-sun='corner'], [data-sun='closing'], [data-corner='free'])[data-hero-name='gone'] .wordmark-name, .wordmark:focus-visible .wordmark-name { opacity: 1; transition: opacity 240ms ease, transform 300ms var(--ease-out); }
-.site[data-corner='free'] :is(.wordmark-name, .motion-toggle) { transform: translateX(round(var(--corner-room), 1px)); }
-.site[data-corner='free'] .wordmark { pointer-events: none; }
-.site[data-corner='free'] .wordmark-name { pointer-events: auto; }
-.wordmark:hover .wordmark-name { text-decoration: underline; }
-.wordmark-sun { position: absolute; top: calc(var(--corner-top) - 18px); right: 0; width: var(--corner-disc); height: var(--corner-disc); border-radius: 50%; pointer-events: none; }
-.site[data-sun='corner'] .wordmark-sun { pointer-events: auto; }
-/* The ring goes round the name, which is what the link reads as, not round a box that runs on
-   behind the Sun. */
-.wordmark:focus-visible { outline: none; }
-.wordmark:focus-visible .wordmark-name { outline: 2px solid var(--amber); outline-offset: 6px; }
-/* The Sun's motion, stopped and started from the header (components/SiteHeader.tsx): the hero's
-   control again, shown for as long as the footage plays away from the hero, where that control is
-   out of reach. A 44px target with the glyph alone; its name says what pressing it will do. Like
-   the link beside it, it is hidden with visibility until then, and stays while it holds focus. */
-.motion-toggle { display: grid; place-items: center; width: 44px; height: 44px; margin-right: 6px; padding: 0; border: 0; border-radius: 3px; background: none; color: var(--muted); cursor: pointer; visibility: hidden; opacity: 0; pointer-events: none; will-change: transform; transition: transform 300ms var(--ease-out); }
-.motion-toggle[data-shown='true'], .motion-toggle:focus-visible { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 240ms ease, color 180ms ease, transform 300ms var(--ease-out); }
-.motion-toggle:hover { color: var(--text); }
-.motion-toggle:focus-visible { outline-offset: -6px; }
-.motion-toggle .icon { width: 16px; height: 16px; flex-basis: 16px; }
-
-/* The name. It stops at the Sun's square: enlarged text wraps it rather than run it on beneath
-   the Sun. Its words stand .22em apart: a Manrope space is .2em, less the letter-spacing, plus
-   the word-spacing. */
-.name-lockup { width: max-content; max-width: calc(100% - var(--sun-size)); margin: 0; font-size: var(--title-size); font-weight: 400; letter-spacing: -.035em; word-spacing: .055em; line-height: 1.1; }
-
-/* Introduction and primary action, beneath the name. */
-.introduction { max-width: min(540px, 43vw); margin-top: 28px; }
-.intro-copy { margin: 0; max-width: 540px; color: var(--text); font-size: clamp(20px, 1.7vw, 25px); line-height: 1.6; letter-spacing: -.015em; text-wrap: balance; }
-.hero-primary { margin-top: 30px; }
-
-/* The Sun. .solar-scene lies over the whole page, from its top to its foot (it is placed against
-   .site). .solar-position is the square the Sun rests in, large enough for "Look closer", fringe
-   included; it is also what hooks/useSunDock.ts scales and shifts as the Sun travels. The page is
-   stacked so that the Sun's light (styles/light.css) falls on the page and never on a Sun or on
-   the header: the page, then the sunlight (28), then a Sun riding the page (29: this one where it
-   does not travel, and the closing box's own in styles/contact.css), then the header (30). On its
-   journey the Sun passes over the header, and in its corner it stands over the header's edge, so
-   there the scene is raised above the header (32).
-
-   Where the Sun travels, it is the browser that stops it in the corner, not the script: the
-   square is sticky, and --sun-stick (written by the hook whenever the layout changes) is how far
-   down the window its top stops, which is where its center is the corner's. Up to there it rides
-   the page; from there to the page's end the browser holds it still while the page scrolls beneath
-   it, in the same frame as the scroll at any speed. A script hears of a scroll a frame late: one
-   that fixed the square in place itself let a fast scroll carry the Sun past its corner, out of
-   the top of the window, for a frame. The script still shrinks and shifts the square on the way
-   up and brings it down at the end, by a transform alone.
-
-   Where the Sun does not travel (data-sun-dock="off") the square rides away with the hero, and
-   then stands in the corner fixed in the window, where it rests at the top of the page, so that
-   one measurement gives the transform that takes it to the corner. With no Sun on screen the
-   scene is hidden: the square is then somewhere above the window. */
-.solar-scene { position: absolute; inset: 0; z-index: 29; pointer-events: none; }
-.site[data-sun-dock='on'] .solar-scene, .site[data-sun='corner'] .solar-scene { z-index: 32; }
-.site[data-sun='none'] .solar-scene { visibility: hidden; }
-.solar-position { position: relative; width: var(--sun-size); max-width: var(--sun-pixel-limit, none); aspect-ratio: 1; margin: var(--sun-top) var(--page-inset) 0 auto; }
-.site[data-sun-dock='on'] .solar-position { position: sticky; top: var(--sun-stick, auto); }
-.site[data-sun-dock='off']:is([data-sun='corner'], [data-sun='closing']) .solar-position { position: fixed; top: var(--sun-top); right: var(--page-inset); margin: 0; }
-/* The square is transformed on every frame of its journeys, so it has a layer of its own while
-   it is on one. */
-.site[data-sun-dock='on']:is([data-sun='hero'], [data-sun='closing']) .solar-position { will-change: transform; }
-/* Normal framing uses 1/1.13 of the reserved square; "Look closer" fills it and never exceeds it.
-   The plane is where the pictures' black sky is taken away (--sun-sky, above): with it go the
-   corners of the square frame, which would blot out the header's edge as the Sun crosses it. In
-   the corner the sky is drawn in tighter, for the charcoal that passes beneath it there. */
-.solar-plane { position: relative; width: 100%; height: 100%; transform: scale(calc(1 / 1.13)); transition: transform 700ms var(--ease-out), --sky-trim 400ms ease; -webkit-mask-image: var(--sun-sky); mask-image: var(--sun-sky); }
-.site[data-sun='corner'] .solar-plane { --sky-trim: 1; }
-.solar-scene--close .solar-plane { transform: scale(1); }
-[data-instant='true'] .solar-plane { transition: none; }
-.solar-media { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-/* The still (components/SunStill.tsx) stays invisible until all of it has arrived. It sits beneath
-   the video until the footage can play smoothly, and returns on failure. It also shows through as
-   the Sun shrinks toward a corner too small for footage: --footage, set on the video by
-   hooks/useSunDock.ts, is the share of the footage still shown then. */
-.sun-still { opacity: 0; }
-.sun-still[data-whole='true'] { opacity: 1; }
-.solar-video { opacity: 0; }
-.solar-video--ready { opacity: var(--footage, 1); }
-.solar-scene[data-still='true'] .solar-video { opacity: 0; }
-
-/* Where the Suns' light falls (components/Sunlight.tsx), above the page and beneath the Suns and
-   the header: a layer over the whole window for the Sun itself, and one laid on the page, from its
-   foot up, for the closing box's own Sun where it has one. They hold the Suns' places;
-   styles/light.css draws the light on them, and until it does they are empty. */
-.site { position: relative; }
-.sunlight { position: fixed; inset: 0; z-index: 28; overflow: hidden; pointer-events: none; }
-.closing-light { display: none; position: absolute; inset: auto 0 0; z-index: 28; pointer-events: none; }
-
-/* Scene controls and attribution along the bottom edge. */
-.hero-footer { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-top: auto; padding-top: 40px; }
-.hero-controls { display: flex; align-items: center; gap: 13px; }
-.scene-tools .tactile-button { min-height: 44px; width: 148px; }
-.scene-tools .button-surface { font-size: 12px; gap: 12px; }
-.media-status { min-height: 20px; max-width: 330px; margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
-.solar-attribution { text-align: right; }
-.source-credit { display: flex; flex-direction: column; gap: 5px; padding: 5px 0; color: #e1ded3; font-size: 12px; line-height: 1.45; text-align: right; text-decoration: none; }
-.source-credit > span:last-child { color: #c1bdb0; }
-.source-usage { display: flex; justify-content: flex-end; align-items: center; min-height: 28px; color: #c1bdb0; font-size: 12px; text-decoration: none; }
-.source-usage:hover { text-decoration: underline; }
-.source-credit svg, .source-usage svg { width: 11px; height: 11px; flex-basis: 11px; margin-left: 4px; stroke: currentColor; stroke-width: 1.2; }
-/* The two credit links are stacked closely; a tighter ring keeps one's focus off the other's text. */
-.source-credit:focus-visible, .source-usage:focus-visible { outline-offset: 2px; }
-
-@media (hover: hover) and (pointer: fine) {
-  .source-credit:hover { text-decoration: underline; }
+@media (max-height: 800px) and (min-width: 761px) {
+  .hero-headline { font-size: clamp(42px, 5.8vw, 84px); }
 }
-@media (max-width: 1000px) and (min-width: 701px) {
-  :root { --title-top: 39svh; --sun-size: min(42vw, 30svh, 420px); }
-  .introduction { max-width: 58vw; }
-  .source-credit { max-width: 232px; }
+@media (max-width: 760px) {
+  .hero { padding-top: calc(var(--header-height) + 8px); row-gap: 32px; }
+  .hero-headline { grid-column: 1 / 3; font-size: clamp(40px, 12.5vw, 64px); }
+  .hero-descriptor { grid-column: 1 / 3; }
 }
-/* On a narrow screen the Sun sits above the name, which has the full width. */
-@media (max-width: 700px) {
-  :root { --title-size: clamp(28px, 8.1vw, 36px); --title-top: 42svh; --sun-top: calc(var(--header-height) + 12px); --sun-size: min(62vw, calc(var(--title-top) - var(--sun-top) - 20px), 280px); --hero-bottom: 16px; }
-  .site-navigation { left: var(--page-inset); gap: 24px; }
-  .site-navigation a { font-size: 13px; justify-content: flex-start; }
-  /* The link is the Sun alone here: its name is kept for assistive technology, and the ring goes
-     round the Sun, outside its fringe. Once the Sun has given way at the page's end there is
-     nothing in the corner for a ring to go round: the link in focus then shows its name there,
-     on two lines so that it keeps clear of the navigation, and the ring goes round that. */
-  .header-home { --corner-room: var(--corner-disc); }
-  .wordmark-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .wordmark:focus-visible .wordmark-name { outline: none; }
-  .wordmark:focus-visible .wordmark-sun { outline: 2px solid var(--amber); outline-offset: calc(var(--corner-fringe) + 3px); }
-  .site[data-corner='free'] .wordmark:focus-visible .wordmark-name { position: static; width: auto; max-width: var(--corner-disc); height: auto; overflow: visible; clip-path: none; white-space: normal; line-height: 1.3; text-align: right; outline: 2px solid var(--amber); }
-  .site[data-corner='free'] .wordmark:focus-visible .wordmark-sun { outline: none; }
-  .name-lockup { max-width: 100%; }
-  .introduction { max-width: none; margin-top: 24px; }
-  .intro-copy { font-size: 20px; line-height: 1.5; }
-  .hero-primary { margin-top: 24px; }
-  .hero-footer { gap: 12px; flex-direction: column; align-items: flex-start; }
-  .hero-controls { gap: 10px; }
-  .scene-tools .tactile-button { width: 146px; }
-  .solar-attribution { text-align: left; }
-  .source-credit { gap: 1px; padding-block: 0; text-align: left; }
-  .source-usage { justify-content: flex-start; min-height: 26px; }
-  /* The lines sit closer together here; keep the ring off the line above. */
-  .source-usage:focus-visible { outline-offset: 0; }
-}
-@media (max-width: 370px) {
-  :root { --title-top: 38svh; }
-  /* Keeps the navigation clear of the corner the Sun docks in. */
-  .site-navigation { gap: 12px; }
-  .intro-copy { font-size: 18px; }
-  .hero-controls { gap: 8px; }
-  .scene-tools .tactile-button { width: 132px; }
-}
-/* Short viewports (landscape phones, squat windows, heavy zoom): the opening is taller than the
-   window, and the Sun is sized to be whole in the first screen. Below 600px tall the header also
-   scrolls away with the page (last rules in this file), instead of holding a fifth or more of the
-   screen, and the Sun does not dock. */
-@media (max-height: 699px) and (max-width: 700px), (max-height: 599px) {
-  :root { --title-top: 290px; --sun-top: calc(var(--header-height) + 12px); --sun-size: min(36vw, calc(100svh - 112px), 300px); }
-  .hero { min-height: 820px; }
-  .introduction { max-width: min(540px, 100%); }
-}
-/* On a short phone screen the Sun leaves room beneath it, so the name is in the first screen too. */
-@media (max-height: 699px) and (max-width: 700px) {
-  :root { --sun-size: min(62vw, max(calc(100svh - 176px), 72px), 260px); --title-top: calc(var(--sun-top) + var(--sun-size) + 24px); }
-}
-@media (max-height: 599px) and (min-width: 701px) {
-  .introduction { max-width: min(540px, 46vw); }
-}
+/* A short, wide window (a landscape phone): the terminal is given the screen after the statement. */
 @media (max-height: 599px) {
-  .site-header { position: absolute; }
-  /* The header has scrolled away by the time the Sun would stand in its corner, so there is no
-     corner here, no link to it, and no control beside it. */
-  .header-home { display: none; }
-}
-/* In a window this short the scene controls sit a screen below the Sun, so the zoom has nothing
-   to show. Pause and play stay. */
-@media (max-height: 480px) {
-  .zoom-control { display: none; }
+  .hero { min-height: 0; }
 }
