@@ -1,57 +1,42 @@
-/* About: biography beside education and certifications, then toolkit and earlier experience. */
-.about-section { background: #080906; padding-block: clamp(90px, 9vw, 144px); }
-.about-main, .about-detail { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: clamp(60px, 11vw, 176px); max-width: var(--content-width); margin-inline: auto; }
-.about-detail { margin-top: 90px; padding-top: 44px; border-top: 1px solid var(--line); }
-.about-section h3 { margin: 0 0 7px; font-size: 23px; font-weight: 450; letter-spacing: -0.02em; }
-
-.biography { margin-top: 38px; max-width: 600px; }
-.biography p { margin: 0 0 24px; font-size: clamp(18px, 1.5vw, 22px); line-height: 1.8; color: #cbc8be; }
-.biography .signature { margin-top: 38px; color: var(--muted); font-size: 16px; }
-
-.education > p { font-size: 14px; line-height: 1.7; color: var(--reading); }
-.education .school { color: var(--muted); margin-top: 0; margin-bottom: 20px; }
-.education .graduation { color: var(--text); }
-.graduation span { display: inline-block; margin-left: 20px; }
-.listing { margin-top: 24px; font-size: 14px; line-height: 1.7; color: var(--reading); }
-.listing h4 { margin: 0 0 5px; color: var(--muted); font-size: 12px; font-weight: 400; }
-.listing .inline-list { text-wrap: balance; }
-
-.credentials { border-top: 1px solid var(--line); margin-top: 34px; padding-top: 32px; }
-.credentials ul { list-style: none; margin: 20px 0 0; padding: 0; }
-.credentials li { margin-bottom: 18px; }
+/* About (components/About.tsx), on the page's one light ground: the biography set large, then four
+   columns of small type. The fixed header's pills and the Sun's caption read over it as they are. */
+.about-section { background: var(--paper); color: var(--ink); padding-block: clamp(96px, 10vw, 160px) clamp(96px, 10vw, 150px); }
+.about-section .muted { color: var(--ink-muted); }
+.about-section ::selection { background: var(--ink); color: var(--paper); }
+.about-section :focus-visible { outline-color: var(--ink); }
+.about-head h2 { grid-column: 1 / 2; margin: 0 0 clamp(40px, 5vw, 72px); font-weight: 400; }
+.about-main { row-gap: 40px; }
+.about-lead { grid-column: 1 / 4; margin: 0; font-size: clamp(26px, 3.1vw, 46px); font-weight: 500; letter-spacing: -.025em; line-height: 1.15; text-wrap: balance; }
+.about-more { grid-column: 2 / 4; }
+.about-more p { margin: 0 0 22px; font-size: clamp(16px, 1.2vw, 18px); line-height: 1.65; color: #3a3a36; }
+.about-more p:last-child { margin-bottom: 0; }
+.about-columns { margin-top: clamp(72px, 8vw, 120px); padding-top: 28px; border-top: 1px solid var(--ink-line); row-gap: 40px; }
+.about-column h3 { margin: 0 0 16px; font-weight: 400; }
+.about-column h4 { margin: 20px 0 4px; font-weight: 400; }
+.about-column p, .about-column dd, .about-column li, .about-column .inline-list { margin: 0; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: #2a2a27; }
+.about-column p + p { margin-top: 2px; }
+.about-strong { color: var(--ink); }
+.about-small { display: block; color: var(--ink-muted); }
+.about-column a { color: var(--ink); text-decoration: none; padding-block: 3px; }
+.about-column a:hover { text-decoration: underline; }
+.about-column a svg { display: inline-block; width: 10px; height: 10px; margin-left: 4px; vertical-align: baseline; }
+.credentials ul { margin: 0; padding: 0; list-style: none; }
+.credentials li { margin-bottom: 16px; }
 .credentials li:last-child { margin-bottom: 0; }
-.listing p { margin: 2px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
-.credentials a, .listing a, .credential-name { color: var(--text); font-size: 14px; line-height: 1.6; text-decoration: none; }
-.credentials a:hover, .listing a:hover { text-decoration: underline; }
-/* Inline, so the arrow follows the last word when a name wraps. The padding makes the link a
-   24px target without moving the text. */
-.credentials a, .listing a { padding-block: 3px; }
-.credentials a:focus-visible, .listing a:focus-visible { outline-offset: 0; }
-.credentials a svg, .listing a svg { display: inline-block; width: 11px; height: 11px; margin-left: 6px; stroke-width: 1.2; vertical-align: baseline; }
-.credential-meta { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.skills dl { margin: 0; }
+.skills dt { margin: 0 0 4px; }
+.skills dd { margin-bottom: 16px; }
+.skills div:last-child dd { margin-bottom: 0; }
 
-.skills dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 48px; margin: 22px 0 0; }
-.skills dt { font-size: 12px; color: var(--muted); margin-bottom: 7px; }
-.skills dd { margin: 0; color: var(--reading); font-size: 14px; line-height: 1.85; }
-
-/* The same scale as a project's organization, role, date, and summary. */
-.earlier p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--muted); }
-.earlier .earlier-organization { margin-top: 20px; color: var(--text); font-size: 15px; }
-.earlier .earlier-summary { margin-top: 16px; color: var(--reading); font-size: 15px; line-height: 1.75; max-width: 60ch; }
-
-@media (max-width: 1000px) and (min-width: 861px) {
-  .about-main, .about-detail { gap: 54px; }
+@media (max-width: 1099px) and (min-width: 761px) {
+  .about-lead { grid-column: 1 / 5; }
+  .about-more { grid-column: 2 / 5; }
+  .about-column { grid-column: span 2; }
 }
-/* One column, with the same rule and the same spacing above every block. */
-@media (max-width: 860px) {
-  .about-main, .about-detail { grid-template-columns: 1fr; gap: 0; }
-  .biography p:last-child { margin-bottom: 0; }
-  .about-background, .credentials, .about-detail, .earlier { margin-top: 44px; padding-top: 38px; border-top: 1px solid var(--line); }
-}
-@media (max-width: 700px) {
-  .biography { margin-top: 28px; }
-  .biography p { font-size: 18px; }
-  .biography .signature { margin-top: 26px; }
-  .skills dl { grid-template-columns: 1fr; gap: 18px; }
-  .earlier .earlier-summary { font-size: 16px; }
+@media (max-width: 760px) {
+  .about-head h2 { grid-column: 1 / 3; }
+  .about-lead, .about-more, .about-column { grid-column: 1 / 3; }
+  .about-more p { font-size: 16px; }
+  .about-columns { row-gap: 32px; }
+  .about-column + .about-column { padding-top: 28px; border-top: 1px solid var(--ink-line); }
 }
