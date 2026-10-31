@@ -1,0 +1,53 @@
+/* Print and 'Save as PDF': a plain light document of a few pages. The terminal, the Sun, the index and
+   decoration are left out; hooks/usePrintExpansion.ts opens every case note. Layout is pinned here so
+   it does not depend on which screen breakpoint the paper width happens to match. */
+@media print {
+  @page { margin: 12mm 14mm; }
+  :root { --gutter: 0px; color-scheme: light; background: #fff; }
+  *, *::before, *::after { color: #111 !important; background: none !important; box-shadow: none !important; text-shadow: none !important; }
+  .muted, .label.muted, .figure-detail, .project-visual-caption, .about-small, .footer-foot { color: #555 !important; }
+
+  .skip-link, .site-header, .corner-sun, .corner-sun-caption, .terminal, .index, .contact-section,
+  .site-footer, .disclosure-icon, .case-links, .icon, .project-visual, .stage-probe, .project-index { display: none !important; }
+
+  .grid { display: block; padding: 0; }
+  .hero { display: block; min-height: 0; padding: 0; }
+  .hero-headline { font-size: 24pt; line-height: 1.1; }
+  .hero-descriptor { max-width: none; margin-top: 6pt; font-size: 9pt; }
+  .print-only { display: block; margin: 5pt 0 0; font-size: 10pt; }
+
+  h2, h3, h4, .project-heading, summary { break-after: avoid; }
+  .figures, .case-content { break-before: avoid; }
+  .project-heading, .figures, .project-facts > div, .case-blocks section, .comparison, .credentials li, .skills dl > div, .earlier { break-inside: avoid; }
+
+  .work-section, .about-section { padding: 14pt 0 0; }
+  .section-head { margin-bottom: 8pt; }
+  .section-head p { max-width: none; margin-top: 3pt; }
+  .project { padding: 10pt 0; border-top: 1px solid #ccc; }
+  .project-heading { margin-bottom: 8pt; }
+  .project h3 { font-size: 15pt; }
+  .project-meta { margin-top: 6pt; }
+  .project-summary { max-width: none; margin-top: 6pt !important; font-size: 10.5pt; }
+  .project-stage { margin: 0; }
+  .project-stage::after { display: none !important; }
+  .project-stage-pin, .project-visual { position: static !important; }
+  .figures { display: flex; flex-wrap: wrap; gap: 8pt 18pt; margin: 8pt 0; padding-top: 6pt; border-top: 1px solid #ccc; }
+  .figure-value { font-size: 14pt; }
+  .project-facts { display: block; margin: 0; border: 0; }
+  .project-facts > div { display: block; padding: 4pt 0; border: 0; }
+  .project-facts dd { max-width: none; font-size: 10pt; }
+  .case-details { margin: 6pt 0 0; }
+  .case-details summary { min-height: 0; padding: 0; }
+  .case-content { margin-top: 4pt; padding-top: 4pt; border-top: 1px solid #ccc; }
+  .case-blocks { display: block; }
+  .case-blocks p { max-width: none; font-size: 10pt; line-height: 1.5; }
+
+  .about-section { color: #111; }
+  .about-head h2 { margin-bottom: 6pt; }
+  .about-main { display: block; }
+  .about-lead { max-width: none; font-size: 12pt; line-height: 1.4; }
+  .about-more { margin-top: 6pt; }
+  .about-more p { font-size: 10.5pt; line-height: 1.5; }
+  .about-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt 18pt; margin-top: 12pt; padding-top: 8pt; border-top: 1px solid #ccc; }
+  .about-column p, .about-column dd, .about-column li, .about-column .inline-list { font-size: 9.5pt; }
+}

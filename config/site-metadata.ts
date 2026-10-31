@@ -1,6 +1,6 @@
 import type { HtmlTagDescriptor, Plugin } from 'vite';
 import { bareAddress, profile, projects, sun, toolkit } from '../src/content.ts';
-import { LARGE_SUN_QUERY, SUN_SOURCE, SUN_VARIANTS, UNUSED_SUN_FILES } from '../src/media.ts';
+import { SUN_MEDIA, SUN_SOURCE, SUN_VARIANTS, UNUSED_SUN_FILES } from '../src/media.ts';
 
 // Build-time metadata derived from src/content.ts, so search engines, link previews, and
 // visitors without JavaScript see the same facts as the page itself.
@@ -232,18 +232,14 @@ export function siteMetadata(siteUrl: string | undefined): Plugin {
           meta('og:url', `${origin}/`),
         );
       }
-      // The hero's first frame is the largest paint, and React renders it too late for the
-      // browser's preload scanner to find. The two queries are exact complements, so every
-      // viewport preloads the one file src/media.ts will choose.
-      const preloadStill = (href: string, media: string): HtmlTagDescriptor => ({ tag: 'link', attrs: { rel: 'preload', as: 'image', href, media, fetchpriority: 'high' }, injectTo: 'head' });
-      tags.push(
-        preloadStill(SUN_VARIANTS.large.still, LARGE_SUN_QUERY),
-        preloadStill(SUN_VARIANTS.small.still, `not all and ${LARGE_SUN_QUERY}`),
-      );
-      // The name and the introduction open the page in Manrope, so fetch it alongside the stylesheet.
-      const font = Object.keys(context.bundle ?? {}).find(file => /manrope-latin-wght-normal.*\.woff2$/.test(file));
-      if (font) {
-        tags.push({ tag: 'link', attrs: { rel: 'preload', as: 'font', type: 'font/woff2', href: `/${font}`, crossorigin: '' }, injectTo: 'head' });
+      // The Sun's still is in the first paint, and React renders it too late for the browser's
+      // preload scanner to find.
+      tags.push({ tag: 'link', attrs: { rel: 'preload', as: 'image', href: SUN_MEDIA.still, fetchpriority: 'high' }, injectTo: 'head' });
+      // The page opens in Manrope (the statement) and Geist Mono (the labels and the terminal), so
+      // fetch both alongside the stylesheet.
+      for (const face of [/manrope-latin-wght-normal.*\.woff2$/, /geist-mono-latin-wght-normal.*\.woff2$/]) {
+        const font = Object.keys(context.bundle ?? {}).find(file => face.test(file));
+        if (font) tags.push({ tag: 'link', attrs: { rel: 'preload', as: 'font', type: 'font/woff2', href: `/${font}`, crossorigin: '' }, injectTo: 'head' });
       }
       // Without scripting there is nothing to wait for: show the plain page at once.
       tags.push({ tag: 'noscript', children: '<style>#root > .plain-page { visibility: visible; animation: none; }</style>', injectTo: 'head' });
