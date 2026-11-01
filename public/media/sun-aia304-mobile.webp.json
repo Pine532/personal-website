@@ -1,0 +1,15 @@
+{
+  "description": "Sourced observation, not generated imagery. NASA Goddard Space Flight Center/SDO, standalone AIA 304 false-color EUV time-lapse, SVS 11379. The first frame of the delivered footage.",
+  "origin": "https://svs.gsfc.nasa.gov/vis/a010000/a011300/a011379/SDO_2013-09-29_304_4k.mov",
+  "sourceRecord": "https://svs.gsfc.nasa.gov/11379/",
+  "credit": "NASA Goddard Space Flight Center/SDO",
+  "sourceIntervalSeconds": [
+    10,
+    18
+  ],
+  "dimensions": [
+    1280,
+    1280
+  ],
+  "transforms": "First decoded frame of sun-aia304-mobile.mp4 (BT.709 to RGB), WebP quality 80. No crop, rotation, recoloring, or generated structure."
+}

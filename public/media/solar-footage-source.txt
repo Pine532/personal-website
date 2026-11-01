@@ -1,0 +1,61 @@
+﻿THE NASA FOOTAGE OF THE SUN — SDO / AIA 304 Å
+
+This note describes real footage of the Sun from NASA's Solar Dynamics
+Observatory. The site showed it until October 2026 and can be switched back
+to it. The label beside the Sun says which one the page is showing: if it
+reads "Rendered by me in Python · based on NASA SDO", the picture is a computer model
+that was calibrated against this footage, and a note of its own describes
+it.
+
+Credit: NASA's Goddard Space Flight Center/SDO.
+Source: Filament Eruption Creates 'Canyon of Fire' on the Sun, SVS 11379.
+https://svs.gsfc.nasa.gov/11379/
+
+Standalone 304 channel, not the narrated film or composite:
+https://svs.gsfc.nasa.gov/vis/a010000/a011300/a011379/SDO_2013-09-29_304_4k.mov
+
+Genuine false-color extreme-ultraviolet observation time-lapse from
+September 29–30, 2013. Not live, real-time, or visible-light footage.
+No simulated surface motion or generated plasma. The footage does not turn:
+neither the files nor the page turn the picture. What moves in it is the
+real Sun's own motion, sped up by the time-lapse.
+
+Source: 4096 × 4096 ProRes, 30 fps.
+Selected interval: source playback 10–18 seconds; frames 300–539 inclusive.
+Local delivery: 1280 × 1280 (a 2048 × 2048 encode is kept in the source code
+but not published, since the Sun is shown at most 200 pixels across), H.264,
+30 fps, 240 frames, eight seconds, muted and inline. The still shown while
+the footage loads, for reduced motion, and after a media failure is the first
+frame of the delivered video (WebP). Footage paused by the visitor holds the
+frame it had reached.
+
+The native video plays at the published source pace, so one loop takes
+eight seconds. It continues independently of scrolling or pointer input.
+The return to the first frame is an edited cut, not a seamless physical event.
+
+Treatment: bounded extraction from the 4K master, Lanczos downsampling,
+high-quality intermediate encodes, then web compression and fast-start
+metadata. Original false-color palette retained. No crop, rotation,
+recoloring, masking, synthetic motion, frame interpolation, or added glow.
+The low-resolution preview is not shipped. All 240 delivered frames were
+checked for gaps and edge clipping; an earlier candidate containing a
+source-damaged frame at 18.2667 seconds was rejected.
+
+The entire media square is shown, through a soft round mask that lets the
+black sky go, fixed in the window's upper-right corner. Display size is capped
+by source resolution and device pixel ratio.
+
+When the footage is the Sun on show, these come from its first delivered
+frame: the link-preview image (the unaltered frame beside the site's own
+text), and the browser icons (square crop around the disk, Lanczos downsampling, black sky
+converted to transparency from pixel brightness at the small sizes). Nothing in them is recolored, sharpened, or generated.
+
+NASA usage guidance, checked September 16, 2026:
+https://www.nasa.gov/nasa-brand-center/images-and-media/
+Informational/personal webpage use with acknowledgment, subject to NASA's
+conditions and third-party rights. No endorsement is implied. This selection
+includes no music, logo, or identifiable person; its source record identifies
+NASA Goddard/SDO and no third-party rights for the selected observation movie.
+
+Typefaces: Manrope and Geist Mono, both SIL Open Font License 1.1
+(manrope-OFL.txt and geist-mono-OFL.txt beside this file).
