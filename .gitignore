@@ -19,8 +19,8 @@ __pycache__/
 # No PDF dropped in the project folder is ever committed; the public copy lives in public/.
 /*.pdf
 
-# Source media and the simulated Sun's intermediate files (about 700 MB). Keep them locally and
-# back them up outside git.
+# Source media and the simulated Sun's intermediate files (several GB: the simulated Sun's work
+# folder alone is about 5.4 GB). Keep them locally and back them up outside git.
 /references/*
 !/references/README.md
 
